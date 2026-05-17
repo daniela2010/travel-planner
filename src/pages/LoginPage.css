@@ -1,0 +1,78 @@
+/* src/pages/LoginPage.css */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  /* שינוי לרקע האפור-תכלת של הדאשבורד לעקביות */
+  background-color: #f1f5f9; 
+}
+
+.login-card {
+  background-color: white;
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  /* שימוש באותה צללית (Shadow) של הדאשבורד */
+  box-shadow: var(--shadow-md); 
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  /* הוספת גבול דק ובהיר שמתאים לשאר האפליקציה */
+  border: 1px solid #e2e8f0;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: var(--space-lg);
+  font-size: 0.95rem;
+}
+
+.input-group {
+  text-align: left; /* זה יחזיר את הטקסט בתוך הקבוצה לצד שמאל */
+  margin-bottom: var(--space-md);
+  width: 100%; /* מוודא שהקבוצה תופסת את כל רוחב הכרטיסייה */
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--text-main);
+  /* אפשר להוסיף גם כאן ליתר ביטחון */
+  text-align: left; 
+}
+
+/* שדרוג שדות הקלט למראה מודרני יותר */
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+/* אפקט פוקוס בשדות הקלט */
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-login {
+  width: 100%;
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: var(--space-md);
+  transition: background-color 0.2s;
+}
+
+.btn-login:hover {
+  background-color: #1d4ed8; /* כחול כהה יותר במעבר עכבר */
+}

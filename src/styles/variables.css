@@ -1,0 +1,23 @@
+:root {
+  /* פלטת צבעים - Color Palette */
+  --primary-blue: #2f5ec4;    /* צבע ראשי לכפתורים ולינקים */
+  --bg-body: #f8fafc;         /* צבע רקע עדין לאתר */
+  --card-white: #ffffff;      /* צבע לבן נקי לכרטיסיות */
+  --text-main: #1e293b;       /* צבע טקסט כהה וקריא */
+  --text-muted: #64748b;      /* צבע טקסט אפור להערות/תאריכים */
+  
+  /* מרווחים - Spacing System */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  
+  /* צלליות וגבולות - UI Elements */
+  --radius: 12px;             /* פינות מעוגלות למראה מודרני */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+
+  /* צבעי עזר להוספת עניין */
+  --accent-green: #10b981;    /* ליעדים של טבע או "הצלחה" */
+  --accent-orange: #f59e0b;   /* לאזהרות או אלמנטים חמים */
+  --bg-soft-blue: #eff6ff;    /* רקע תכלת עדין מאוד לאלמנטים מסוימים */
+}

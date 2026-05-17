@@ -1,0 +1,65 @@
+/* הרקע של כל הדף */
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #f1f5f9; /* הצבע שביקשת */
+  padding: var(--space-lg);
+}
+
+/* ה"קופסה" הלבנה שמרכזת את התוכן */
+.dashboard-content-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: var(--radius);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm); /* צל עדין כדי לתת עומק */
+  min-height: 70vh; /* שיהיה לה גובה גם כשהיא ריקה */
+}
+
+/* עיצוב הכותרת בתוך הקופסה */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid #f1f5f9; /* קו הפרדה עדין */
+}
+
+/* שאר העיצובים של הכפתורים נשארים אותו דבר */
+.btn-add-trip {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+/* עיצוב הכפתור "Start your first adventure" */
+.btn-primary-outline {
+  background-color: transparent; /* רקע שקוף */
+  color: var(--primary-blue);   /* טקסט בצבע הכחול שהגדרנו */
+  border: 2px solid var(--primary-blue); /* מסגרת כחולה */
+  padding: 12px 28px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out; /* אפקט מעבר חלק */
+  margin-top: var(--space-md);
+}
+
+/* אפקט כשמעבירים את העכבר על הכפתור */
+.btn-primary-outline:hover {
+  background-color: var(--primary-blue); /* הרקע הופך לכחול */
+  color: white; /* הטקסט הופך ללבן */
+  box-shadow: var(--shadow-md); /* הוספת צל מרחף */
+}

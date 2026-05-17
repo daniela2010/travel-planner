@@ -1,0 +1,151 @@
+.planner-container {
+  padding: var(--space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f1f5f9; /* הרקע האחיד של האפליקציה */
+  min-height: 100vh;
+}
+
+/* --- סרגל עליון --- */
+.planner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  background-color: white;
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-info h1 { margin: 0 0 8px 0; color: var(--text-main); }
+.header-info p { margin: 0; color: var(--text-muted); }
+
+/* --- פריסת הרשת (Grid Layout) --- */
+.planner-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr; /* סרגל הצד תופס 280 פיקסלים, השאר לאזור המרכזי */
+  gap: var(--space-lg);
+}
+
+/* --- סרגל ימים (Sidebar) --- */
+.days-sidebar {
+  background-color: white;
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  height: fit-content;
+}
+
+.days-sidebar h3 { margin-top: 0; margin-bottom: var(--space-md); }
+
+.days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-btn {
+  text-align: left;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-main);
+  transition: all 0.2s;
+}
+
+.day-btn:hover { background-color: #f8fafc; }
+
+/* היום המסומן כרגע */
+.day-btn.active {
+  background-color: #eff6ff;
+  color: var(--primary-blue);
+  border-color: var(--primary-blue);
+  font-weight: 600;
+}
+
+.btn-add-day {
+  margin-top: var(--space-md);
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.btn-add-day:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+
+/* --- אזור פעילויות מרכזי --- */
+.activities-main {
+  background-color: white;
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.activities-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: var(--space-md);
+}
+
+.btn-add-activity {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* כרטיסיית פעילות בודדת */
+.activity-card {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: #cbd5e1;
+}
+
+.activity-time {
+  font-weight: 600;
+  color: var(--primary-blue);
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.activity-details { flex-grow: 1; }
+.activity-details h4 { margin: 0 0 8px 0; color: var(--text-main); }
+
+.badge {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background-color: #f1f5f9;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.btn-icon { background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
