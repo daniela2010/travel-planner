@@ -76,3 +76,22 @@
 .btn-login:hover {
   background-color: #1d4ed8; /* כחול כהה יותר במעבר עכבר */
 }
+
+/* עיצוב להודעות שגיאה והצלחה בתחתית הטופס */
+.status-message {
+  text-align: center;
+  margin: 10px 0;
+  font-weight: 600;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.status-message.success {
+  color: #15803d; /* ירוק יפה שמתאים לשאר העיצוב */
+  background-color: #dcfce7;
+}
+
+.status-message.error {
+  color: #b91c1c; /* אדום מתאים */
+  background-color: #fee2e2;
+}

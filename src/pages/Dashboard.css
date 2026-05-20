@@ -63,3 +63,48 @@
   color: white; /* הטקסט הופך ללבן */
   box-shadow: var(--shadow-md); /* הוספת צל מרחף */
 }
+
+/* רשת הטיולים - מסדרת את הכרטיסיות יפה אחת ליד השנייה */
+.trips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* הכרטיסייה עצמה */
+.trip-card {
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+  background-color: #ffffff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* אנימציה קטנה של ריחוף כשמעבירים עכבר */
+.trip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.trip-card h3 {
+  margin-top: 0;
+  color: var(--primary-blue);
+  margin-bottom: 15px;
+  font-size: 1.25rem;
+}
+
+.trip-dates p {
+  margin: 8px 0;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.trip-budget {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #cbd5e1;
+  color: #10b981; /* צבע ירוק רענן ויפה למחיר */
+  font-weight: 600;
+}

@@ -7,6 +7,7 @@ Content-Type: application/json
     "password": "mysecretpassword"
 }
 
+###
 POST http://localhost:5000/api/trips
 Content-Type: application/json
 

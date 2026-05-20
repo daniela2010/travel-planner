@@ -1,12 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const trips = []; 
+  // החלפנו את המערך הקבוע במשתנה חכם שמתעדכן
+  const [trips, setTrips] = useState([]); 
+  const navigate = useNavigate();
+
+  // משיכת הטיולים מהשרת ברגע שהדף נטען
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        
+        if (!userId) {
+          navigate('/login');
+          return;
+        }
+
+        const response = await axios.get(`http://localhost:5000/api/trips/${userId}`);
+        setTrips(response.data);
+      } catch (error) {
+        console.error('Error fetching trips:', error);
+      }
+    };
+
+    fetchTrips();
+  }, [navigate]);
 
   return (
     <div className="dashboard-container">
-      {/* הוספנו את ה-wrapper הזה כדי ליצור את הקופסה הלבנה */}
       <div className="dashboard-content-wrapper">
         <header className="dashboard-header">
           <h1>My Journeys</h1>
@@ -21,7 +45,17 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="trips-grid">
-            {/* כאן יופיעו הכרטיסיות בעתיד */}
+            {/* כאן אנחנו רצים על הטיולים שחזרו מהשרת ומייצרים כרטיסייה לכל אחד */}
+            {trips.map((trip) => (
+              <div key={trip._id} className="trip-card">
+                <h3>{trip.destination}</h3>
+                <div className="trip-dates">
+                  <p><strong>From:</strong> {new Date(trip.startDate).toLocaleDateString()}</p>
+                  <p><strong>To:</strong> {new Date(trip.endDate).toLocaleDateString()}</p>
+                </div>
+                {trip.budget && <p className="trip-budget"><strong>Budget:</strong> ${trip.budget}</p>}
+              </div>
+            ))}
           </div>
         )}
       </div>
