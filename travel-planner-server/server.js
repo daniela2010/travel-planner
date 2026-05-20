@@ -18,6 +18,7 @@ db.once('open', () => { console.log('Connected to MongoDB successfully!') });
 
 // ייבוא המודל שיצרנו
 const User = require('./models/User');
+const Trip = require('./models/Trip');
 
 // נתיב להרשמת משתמש חדש
 app.post('/api/register', async (req, res) => {
@@ -67,6 +68,36 @@ app.post('/api/login', async (req, res) => {
         // אם הגענו לפה, הכל תקין! המשתמש התחבר בהצלחה
         res.json({ message: "Login successful", user: { name: user.name, email: user.email } });
 
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// יצירת טיול חדש (POST)
+app.post('/api/trips', async (req, res) => {
+    try {
+        const newTrip = new Trip({
+            destination: req.body.destination,
+            startDate: req.body.startDate,
+            endDate: req.body.endDate,
+            budget: req.body.budget,
+            userId: req.body.userId // תעודת הזהות של המשתמש שיצר את הטיול
+        });
+        
+        const savedTrip = await newTrip.save();
+        res.status(201).json(savedTrip);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// 2. שליפת כל הטיולים של משתמש מסוים (GET)
+// נשתמש ב- params כדי לקבל את ה-ID מהכתובת
+app.get('/api/trips/:userId', async (req, res) => {
+    try {
+        // מחפשים את כל הטיולים שה-userId שלהם תואם למה שקיבלנו
+        const trips = await Trip.find({ userId: req.params.userId });
+        res.json(trips);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
