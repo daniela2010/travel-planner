@@ -1,0 +1,88 @@
+/* src/pages/RegisterPage.css */
+
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f1f5f9;
+  padding: var(--space-lg) 0;
+}
+
+.register-card {
+  background-color: white;
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 450px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: var(--space-lg);
+  font-size: 0.95rem;
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: var(--space-md);
+  width: 100%;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--text-main);
+  text-align: left;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-register {
+  width: 100%;
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: var(--space-sm);
+  transition: background-color 0.2s;
+}
+
+.btn-register:hover {
+  background-color: #1d4ed8;
+}
+
+.login-link {
+  margin-top: var(--space-md);
+  font-size: 0.9rem;
+}
+
+.login-link a {
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
