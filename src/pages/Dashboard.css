@@ -74,6 +74,7 @@
 
 /* הכרטיסייה עצמה */
 .trip-card {
+  position: relative;
   border: 1px solid #e2e8f0;
   border-radius: var(--radius);
   padding: var(--space-md);
@@ -107,4 +108,23 @@
   border-top: 1px dashed #cbd5e1;
   color: #10b981; /* צבע ירוק רענן ויפה למחיר */
   font-weight: 600;
+}
+
+/* עיצוב כפתור המחיקה (פח האשפה) */
+.btn-delete-trip {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.5; /* שקוף חלקית כדי לא להשתלט על העיצוב */
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn-delete-trip:hover {
+  opacity: 1;
+  transform: scale(1.1); /* גדל קצת כשעוברים עליו */
+  filter: grayscale(0%) sepia(100%) hue-rotate(-50deg) saturate(500%); /* נותן גוון אדמדם במעבר עכבר */
 }

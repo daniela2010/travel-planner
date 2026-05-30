@@ -102,3 +102,20 @@ app.get('/api/trips/:userId', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// 3. מחיקת טיול (DELETE)
+app.delete('/api/trips/:id', async (req, res) => {
+    try {
+        // Mongoose מחפש את הטיול לפי ה-ID שלו ומוחק אותו ממסד הנתונים
+        const deletedTrip = await Trip.findByIdAndDelete(req.params.id);
+        
+        // אם מישהו מנסה למחוק טיול שכבר לא קיים
+        if (!deletedTrip) {
+            return res.status(404).json({ message: 'Trip not found' });
+        }
+        
+        res.json({ message: 'Trip deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});

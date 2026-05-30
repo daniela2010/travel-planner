@@ -4,6 +4,7 @@ import './styles/variables.css';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
+import AddTripPage from './pages/AddTripPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/add-trip" element={<AddTripPage />} />
         </Routes>
       </div>
     </Router>
