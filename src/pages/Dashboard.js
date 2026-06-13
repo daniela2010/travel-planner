@@ -45,12 +45,24 @@ const Dashboard = () => {
       }
     }
   };
- return (
+
+  // --- הפונקציה החדשה: התנתקות ---
+  const handleLogout = () => {
+    // 1. מוחקים את תעודת הזהות מהזיכרון של הדפדפן
+    localStorage.removeItem('userId');
+    // 2. מעבירים את המשתמש חזרה לדף ההתחברות
+    navigate('/login');
+  };
+
+  return (
     <div className="dashboard-container">
+      <button className="btn-logout" onClick={handleLogout}>Logout</button>
       <div className="dashboard-content-wrapper">
         <header className="dashboard-header">
           <h1>My Journeys</h1>
-          <button className="btn-add-trip" onClick={() => navigate('/add-trip')}>+ New Trip</button>
+          <div className="header-actions">
+            <button className="btn-add-trip" onClick={() => navigate('/add-trip')}>+ New Trip</button>
+          </div>
         </header>
 
         {trips.length === 0 ? (
@@ -63,8 +75,6 @@ const Dashboard = () => {
           <div className="trips-grid">
             {trips.map((trip) => (
               <div key={trip._id} className="trip-card">
-                
-                {/* כפתור המחיקה החדש שהוספנו! */}
                 <button 
                   className="btn-delete-trip" 
                   onClick={() => handleDelete(trip._id)}
@@ -72,7 +82,6 @@ const Dashboard = () => {
                 >
                   🗑️
                 </button>
-
                 <h3>{trip.destination}</h3>
                 <div className="trip-dates">
                   <p><strong>From:</strong> {new Date(trip.startDate).toLocaleDateString()}</p>

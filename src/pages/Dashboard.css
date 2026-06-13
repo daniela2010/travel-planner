@@ -1,8 +1,9 @@
 /* הרקע של כל הדף */
 .dashboard-container {
   min-height: 100vh;
-  background-color: #f1f5f9; /* הצבע שביקשת */
+  background-color: #f1f5f9;
   padding: var(--space-lg);
+  position: relative;
 }
 
 /* ה"קופסה" הלבנה שמרכזת את התוכן */
@@ -127,4 +128,32 @@
   opacity: 1;
   transform: scale(1.1); /* גדל קצת כשעוברים עליו */
   filter: grayscale(0%) sepia(100%) hue-rotate(-50deg) saturate(500%); /* נותן גוון אדמדם במעבר עכבר */
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+/* כפתור התנתקות */
+.btn-logout {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: transparent;
+  color: var(--text-muted);
+  border: 1px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-logout:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
 }
