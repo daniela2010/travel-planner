@@ -7,7 +7,7 @@ const api = axios.create({
     baseURL: 'http://localhost:5000/api'
 });
 
-// --- Request interceptor ---
+// Request interceptor
 // This runs automatically before EVERY request made with `api`.
 // It reads the saved token and adds it to the Authorization header,
 // so we don't have to attach it manually in each component.

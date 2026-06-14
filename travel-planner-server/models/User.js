@@ -42,7 +42,7 @@ userSchema.pre('save', async function () {
     this.password = await bcrypt.hash(this.password, salt);
 });
 
-// --- Instance method ---
+// Instance method
 // Lets us compare a plain-text password (from login) with the stored hash.
 // Usage: const isMatch = await user.comparePassword(req.body.password);
 userSchema.methods.comparePassword = function (candidatePassword) {

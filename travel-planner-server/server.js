@@ -17,39 +17,43 @@ const db = mongoose.connection;
 db.on('error', error => { console.error('Error connecting to MongoDB:', error); });
 db.once('open', () => { console.log('Connected to MongoDB successfully!'); });
 
-// Import our models
+// Models
 const User = require('./models/User');
 const Trip = require('./models/Trip');
 
-// Import the JWT authentication middleware
+// Middleware
 const authMiddleware = require('./middleware/Auth');
+const validate = require('./middleware/validate');
+const errorHandler = require('./middleware/errorHandler');
+
+// Validation schemas + custom error class
+const { registerSchema, loginSchema, tripSchema } = require('./validators/schemas');
+const AppError = require('./utils/AppError');
 
 // Helper: create a signed JWT for a given user.
-// The payload holds non-sensitive info we want to read later (NEVER the password).
 function createToken(user) {
     return jwt.sign(
-        { id: user._id, name: user.name }, // payload
-        process.env.JWT_SECRET,            // secret key from .env
-        { expiresIn: '7d' }                // token is valid for 7 days
+        { id: user._id, name: user.name },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
     );
 }
 
-// ----------------------------------------------------------------------------
-// AUTH ROUTES (public - no token needed)
-// ----------------------------------------------------------------------------
-
+// AUTH ROUTES (public)
+// Note: `validate(...)` runs BEFORE the handler. If the body is invalid,
+// it responds with 400 and the handler never runs.
+// We also pass any caught error to next(error) so the GLOBAL error handler
+// (at the bottom) deals with it, instead of formatting errors here.
 // Register a new user
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', validate(registerSchema), async (req, res, next) => {
     try {
         const user = new User({
             name: req.body.name,
             email: req.body.email,
-            password: req.body.password // will be hashed automatically by the model's pre-save hook
+            password: req.body.password // hashed automatically by the model's pre-save hook
         });
 
         const savedUser = await user.save();
-
-        // Issue a token right away so the user is logged in after registering.
         const token = createToken(savedUser);
 
         res.status(201).json({
@@ -58,32 +62,30 @@ app.post('/api/register', async (req, res) => {
             user: { id: savedUser._id, name: savedUser.name, email: savedUser.email }
         });
     } catch (error) {
-        // Handle the "email already exists" case nicely (Mongo duplicate key error code is 11000)
+        // Turn the Mongo duplicate-key error into a clean, expected error.
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'This email is already registered' });
+            return next(new AppError('This email is already registered', 400));
         }
-        res.status(400).json({ message: error.message });
+        next(error); // anything else -> global handler
     }
 });
 
 // Login an existing user
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', validate(loginSchema), async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // Step 1: find the user by email
         const user = await User.findOne({ email: email });
         if (!user) {
-            return res.status(400).json({ message: 'User not found' });
+            // Throw an expected error with the right status code.
+            return next(new AppError('User not found', 400));
         }
 
-        // Step 2: compare the typed password with the stored HASH (using bcrypt)
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Wrong password, please try again' });
+            return next(new AppError('Wrong password, please try again', 400));
         }
 
-        // Step 3: everything is correct -> issue a JWT token
         const token = createToken(user);
 
         res.json({
@@ -92,67 +94,65 @@ app.post('/api/login', async (req, res) => {
             user: { id: user._id, name: user.name, email: user.email }
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 });
 
-// ----------------------------------------------------------------------------
-// TRIP ROUTES (protected - authMiddleware runs first on every request)
-// Notice: the user id now comes from req.user (the verified token),
-// NOT from the request body/params. This is what makes it secure.
-// ----------------------------------------------------------------------------
-
+// TRIP ROUTES (protected)
 // Create a new trip
-app.post('/api/trips', authMiddleware, async (req, res) => {
+app.post('/api/trips', authMiddleware, validate(tripSchema), async (req, res, next) => {
     try {
         const newTrip = new Trip({
             destination: req.body.destination,
             startDate: req.body.startDate,
             endDate: req.body.endDate,
             budget: req.body.budget,
-            userId: req.user.id // taken from the verified token, not from the client
+            userId: req.user.id
         });
 
         const savedTrip = await newTrip.save();
         res.status(201).json(savedTrip);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        next(error);
     }
 });
 
 // Get all trips that belong to the logged-in user
-app.get('/api/trips', authMiddleware, async (req, res) => {
+app.get('/api/trips', authMiddleware, async (req, res, next) => {
     try {
         const trips = await Trip.find({ userId: req.user.id });
         res.json(trips);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 });
 
 // Delete a trip (only if it belongs to the logged-in user)
-app.delete('/api/trips/:id', authMiddleware, async (req, res) => {
+app.delete('/api/trips/:id', authMiddleware, async (req, res, next) => {
     try {
         const trip = await Trip.findById(req.params.id);
 
         if (!trip) {
-            return res.status(404).json({ message: 'Trip not found' });
+            return next(new AppError('Trip not found', 404));
         }
 
-        // Ownership check: a user must not be able to delete someone else's trip.
-        // .toString() converts the Mongo ObjectId to a string so we can compare it.
         if (trip.userId.toString() !== req.user.id) {
-            return res.status(403).json({ message: 'Not authorized to delete this trip' });
+            return next(new AppError('Not authorized to delete this trip', 403));
         }
 
         await trip.deleteOne();
         res.json({ message: 'Trip deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        next(error);
     }
 });
 
-// Start the server (this should always be the LAST thing in the file)
+// GLOBAL ERROR HANDLER
+// Must be registered AFTER all routes. Any error passed to next(err)
+// anywhere above ends up here and gets a consistent JSON response.
+app.use(errorHandler);
+
+// Start the server (always last)
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });
