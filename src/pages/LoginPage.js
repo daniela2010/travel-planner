@@ -1,92 +1,45 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './LoginPage.css'; // העיצוב המקורי שלך נשאר!
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './styles/variables.css';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import Dashboard from './pages/Dashboard';
+import AddTripPage from './pages/AddTripPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
-const LoginPage = () => {
-  // משתני הזיכרון לשמירת הנתונים שהמשתמש מקליד
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const navigate = useNavigate();
-
-  // הפונקציה שמתופעלת בלחיצה על הכפתור
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.post('http://localhost:5000/api/login', {
-        email: email,
-        password: password
-      });
-
-      // שומרים את ה-ID של המשתמש ב"מחברת" של הדפדפן כדי שה-Dashboard יכיר אותו
-      localStorage.setItem('userId', response.data.user.id);
-
-      setMessage('Login successful! Redirecting...');
-      
-      // מעבירים לדאשבורד
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-
-    } catch (error) {
-      if (error.response && error.response.data) {
-        setMessage(error.response.data.message);
-      } else {
-        setMessage('An error occurred during login.');
-      }
-    }
-  };
-
+function App() {
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1>Welcome to Travel Planner</h1>
-        <p className="subtitle">Please sign in to manage your journeys</p>
-        
-        {/* חיבור הפונקציה לטופס */}
-        <form className="login-form" onSubmit={handleLogin}>
-          <div className="input-group">
-            <label htmlFor="email">Email Address</label>
-            <input 
-              type="email" 
-              id="email" 
-              placeholder="enter your email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)} // עדכון אוטומטי של המשתנה
-              required 
-            />
-          </div>
-          
-          <div className="input-group">
-            <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              placeholder="enter your password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)} // עדכון אוטומטי של המשתנה
-              required 
-            />
-          </div>
-          
-          {/* הצגת הודעות למשתמש */}
-          {message && (
-            <p className={`status-message ${message.includes('successful') ? 'success' : 'error'}`}>              {message}
-            </p>
-          )}
+    <Router>
+      <div className="App">
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-          <button type="submit" className="btn-login">Sign In</button>
-        </form>
-        
-        <p className="signup-link">
-          {/* עדיף להשתמש ב-Link של React כדי למנוע רענון מלא של הדף */}
-          Don't have an account? <Link to="/register">Sign Up</Link>
-        </p>
+          {/* Protected routes - only reachable when a token exists */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-trip"
+            element={
+              <ProtectedRoute>
+                <AddTripPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/login" />} />
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
-};
+}
 
-export default LoginPage;
+export default App;

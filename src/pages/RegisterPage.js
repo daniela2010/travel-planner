@@ -1,40 +1,34 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // הוספנו את useNavigate כדי שנוכל להעביר דף אחרי ההרשמה
-import axios from 'axios'; // ייבוא השליח שלנו!
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../api/api'; // our central axios instance
 import '../styles/Auth.css';
 
 function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // משתנים להצגת הודעות הצלחה או שגיאה
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
-    e.preventDefault(); // עוצר את רענון הדף הרגיל
+    e.preventDefault();
 
     try {
-      // כאן אנחנו שולחים את המידע לשרת שלנו!
-      const response = await axios.post('http://localhost:5000/api/register', {
-        name: name,
-        email: email,
-        password: password
-      });
+      const response = await api.post('/register', { name, email, password });
 
-      // אם הגענו לפה, ההרשמה הצליחה
-      setMessage('Registration successful! Redirecting to login...');
-      
-      // מחכים 2 שניות ומעבירים את המשתמש לדף ההתחברות
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // The server now returns a token on register too, so we log the user in directly.
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userName', response.data.user.name);
 
+      setMessage('Registration successful! Redirecting...');
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (error) {
-      // אם יש שגיאה (למשל האימייל כבר קיים), נציג אותה
-      setMessage('Registration failed. Please try again.');
-      console.error(error);
+      // Show the real server message when available (e.g. "email already registered").
+      if (error.response && error.response.data) {
+        setMessage(error.response.data.message);
+      } else {
+        setMessage('Registration failed. Please try again.');
+      }
     }
   };
 
@@ -44,37 +38,41 @@ function RegisterPage() {
       <form onSubmit={handleRegister}>
         <div className="form-group">
           <label>Full Name</label>
-          <input 
-            type="text" 
-            placeholder="Enter your full name" 
+          <input
+            type="text"
+            placeholder="Enter your full name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required 
+            required
           />
         </div>
         <div className="form-group">
           <label>Email</label>
-          <input 
-            type="email" 
-            placeholder="Enter your email" 
+          <input
+            type="email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required 
+            required
           />
         </div>
         <div className="form-group">
           <label>Password</label>
-          <input 
-            type="password" 
-            placeholder="Create a password" 
+          <input
+            type="password"
+            placeholder="Create a password (min 6 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required 
+            minLength={6}
+            required
           />
         </div>
-        
-        {/* הודעת סטטוס קטנה למשתמש */}
-        {message && <p className="status-message" style={{ color: message.includes('failed') ? 'red' : 'green' }}>{message}</p>}
+
+        {message && (
+          <p className="status-message" style={{ color: message.includes('successful') ? 'green' : 'red' }}>
+            {message}
+          </p>
+        )}
 
         <button type="submit" className="auth-button">Register</button>
       </form>

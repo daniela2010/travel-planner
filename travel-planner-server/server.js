@@ -1,8 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-require('dotenv').config(); 
+require('dotenv').config();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -13,77 +14,105 @@ app.use(cors());
 mongoose.connect(process.env.DATABASE_URL);
 const db = mongoose.connection;
 
-db.on('error', error => { console.error('Error connecting to MongoDB:', error) });
-db.once('open', () => { console.log('Connected to MongoDB successfully!') });
+db.on('error', error => { console.error('Error connecting to MongoDB:', error); });
+db.once('open', () => { console.log('Connected to MongoDB successfully!'); });
 
-// ייבוא המודל שיצרנו
+// Import our models
 const User = require('./models/User');
 const Trip = require('./models/Trip');
 
-// נתיב להרשמת משתמש חדש
+// Import the JWT authentication middleware
+const authMiddleware = require('./middleware/Auth');
+
+// Helper: create a signed JWT for a given user.
+// The payload holds non-sensitive info we want to read later (NEVER the password).
+function createToken(user) {
+    return jwt.sign(
+        { id: user._id, name: user.name }, // payload
+        process.env.JWT_SECRET,            // secret key from .env
+        { expiresIn: '7d' }                // token is valid for 7 days
+    );
+}
+
+// ----------------------------------------------------------------------------
+// AUTH ROUTES (public - no token needed)
+// ----------------------------------------------------------------------------
+
+// Register a new user
 app.post('/api/register', async (req, res) => {
-    // מדפיסים לטרמינל כדי לראות מה קיבלנו
-    console.log(req.body); 
-
-    // יוצרים משתמש חדש לפי המודל שלנו
-    const user = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password
-    });
-
-    // מנסים לשמור במסד הנתונים
     try {
+        const user = new User({
+            name: req.body.name,
+            email: req.body.email,
+            password: req.body.password // will be hashed automatically by the model's pre-save hook
+        });
+
         const savedUser = await user.save();
-        res.json(savedUser); // מחזירים תשובה שהכל הצליח
+
+        // Issue a token right away so the user is logged in after registering.
+        const token = createToken(savedUser);
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            token,
+            user: { id: savedUser._id, name: savedUser.name, email: savedUser.email }
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message }); // מחזירים שגיאה אם משהו השתבש
+        // Handle the "email already exists" case nicely (Mongo duplicate key error code is 11000)
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'This email is already registered' });
+        }
+        res.status(400).json({ message: error.message });
     }
 });
 
-app.listen(5000, () => {
-    console.log('Server is running on port 5000');
-});
-
-// נתיב להתחברות משתמש קיים
+// Login an existing user
 app.post('/api/login', async (req, res) => {
     try {
-        // מחלצים את האימייל והסיסמה מתוך הבקשה
         const { email, password } = req.body;
 
-        // שלב א': מחפשים אם בכלל קיים משתמש עם האימייל הזה במסד הנתונים
+        // Step 1: find the user by email
         const user = await User.findOne({ email: email });
-        
         if (!user) {
-            // אם לא מצאנו משתמש
-            return res.status(400).json({ message: "User not found" });
+            return res.status(400).json({ message: 'User not found' });
         }
 
-        // שלב ב': בודקים אם הסיסמה שהוזנה תואמת לסיסמה השמורה במסד הנתונים
-        if (user.password !== password) {
-            // אם הסיסמה לא נכונה
-            return res.status(400).json({ message: "Wrong password please try again" });
+        // Step 2: compare the typed password with the stored HASH (using bcrypt)
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Wrong password, please try again' });
         }
 
-        // אם הגענו לפה, הכל תקין! המשתמש התחבר בהצלחה
-        res.json({ message: "Login successful", user: { id: user._id, name: user.name, email: user.email } });
+        // Step 3: everything is correct -> issue a JWT token
+        const token = createToken(user);
 
+        res.json({
+            message: 'Login successful',
+            token,
+            user: { id: user._id, name: user.name, email: user.email }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// יצירת טיול חדש (POST)
-app.post('/api/trips', async (req, res) => {
+// ----------------------------------------------------------------------------
+// TRIP ROUTES (protected - authMiddleware runs first on every request)
+// Notice: the user id now comes from req.user (the verified token),
+// NOT from the request body/params. This is what makes it secure.
+// ----------------------------------------------------------------------------
+
+// Create a new trip
+app.post('/api/trips', authMiddleware, async (req, res) => {
     try {
         const newTrip = new Trip({
             destination: req.body.destination,
             startDate: req.body.startDate,
             endDate: req.body.endDate,
             budget: req.body.budget,
-            userId: req.body.userId // תעודת הזהות של המשתמש שיצר את הטיול
+            userId: req.user.id // taken from the verified token, not from the client
         });
-        
+
         const savedTrip = await newTrip.save();
         res.status(201).json(savedTrip);
     } catch (error) {
@@ -91,31 +120,39 @@ app.post('/api/trips', async (req, res) => {
     }
 });
 
-// 2. שליפת כל הטיולים של משתמש מסוים (GET)
-// נשתמש ב- params כדי לקבל את ה-ID מהכתובת
-app.get('/api/trips/:userId', async (req, res) => {
+// Get all trips that belong to the logged-in user
+app.get('/api/trips', authMiddleware, async (req, res) => {
     try {
-        // מחפשים את כל הטיולים שה-userId שלהם תואם למה שקיבלנו
-        const trips = await Trip.find({ userId: req.params.userId });
+        const trips = await Trip.find({ userId: req.user.id });
         res.json(trips);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// 3. מחיקת טיול (DELETE)
-app.delete('/api/trips/:id', async (req, res) => {
+// Delete a trip (only if it belongs to the logged-in user)
+app.delete('/api/trips/:id', authMiddleware, async (req, res) => {
     try {
-        // Mongoose מחפש את הטיול לפי ה-ID שלו ומוחק אותו ממסד הנתונים
-        const deletedTrip = await Trip.findByIdAndDelete(req.params.id);
-        
-        // אם מישהו מנסה למחוק טיול שכבר לא קיים
-        if (!deletedTrip) {
+        const trip = await Trip.findById(req.params.id);
+
+        if (!trip) {
             return res.status(404).json({ message: 'Trip not found' });
         }
-        
+
+        // Ownership check: a user must not be able to delete someone else's trip.
+        // .toString() converts the Mongo ObjectId to a string so we can compare it.
+        if (trip.userId.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to delete this trip' });
+        }
+
+        await trip.deleteOne();
         res.json({ message: 'Trip deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+});
+
+// Start the server (this should always be the LAST thing in the file)
+app.listen(5000, () => {
+    console.log('Server is running on port 5000');
 });
