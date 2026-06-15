@@ -149,3 +149,36 @@
 }
 
 .btn-icon { background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+ 
+/* The inline "add activity" form */
+.activity-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm, 8px);
+  background-color: white;
+  padding: var(--space-md, 16px);
+  border-radius: var(--radius, 8px);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-md, 16px);
+}
+ 
+.activity-form input,
+.activity-form select {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+ 
+/* Let the title input grow to fill the row */
+.activity-form input[type="text"] {
+  flex: 1;
+  min-width: 180px;
+}
+ 
+/* Optional notes shown under an activity title */
+.activity-notes {
+  margin: 6px 0 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

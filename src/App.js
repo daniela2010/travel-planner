@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import AddTripPage from './pages/AddTripPage';
+import TripPlanner from './pages/TripPlanner';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -30,6 +31,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddTripPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* The :tripId part is dynamic - it changes per trip */}
+          <Route
+            path="/trip/:tripId"
+            element={
+              <ProtectedRoute>
+                <TripPlanner />
               </ProtectedRoute>
             }
           />

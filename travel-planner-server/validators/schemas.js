@@ -45,8 +45,26 @@ const tripSchema = Joi.object({
     budget: Joi.number().positive().allow('', null).optional()
 });
 
+// Rules for creating an activity inside a trip
+const activitySchema = Joi.object({
+    day: Joi.number().integer().min(1).required().messages({
+        'number.base': 'Day must be a number',
+        'any.required': 'Day is required'
+    }),
+    time: Joi.string().required().messages({
+        'string.empty': 'Time is required'
+    }),
+    title: Joi.string().min(2).max(100).required().messages({
+        'string.empty': 'Title is required'
+    }),
+    // Must match one of the allowed types in the Activity model
+    type: Joi.string().valid('Transport', 'Lodging', 'Food', 'Attraction', 'Other').required(),
+    notes: Joi.string().allow('', null).optional()
+});
+
 module.exports = {
     registerSchema,
     loginSchema,
-    tripSchema
+    tripSchema,
+    activitySchema
 };

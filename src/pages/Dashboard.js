@@ -11,11 +11,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        // No userId in the URL anymore: the server reads it from the token.
         const response = await api.get('/trips');
         setTrips(response.data);
       } catch (error) {
-        // If the token is missing/expired the server returns 401 -> send to login.
         if (error.response && error.response.status === 401) {
           navigate('/login');
           return;
@@ -32,7 +30,6 @@ const Dashboard = () => {
     if (window.confirm('Are you sure you want to delete this trip?')) {
       try {
         await api.delete(`/trips/${tripId}`);
-        // Remove the deleted trip from the screen without a page refresh.
         setTrips(trips.filter((trip) => trip._id !== tripId));
       } catch (error) {
         console.error('Error deleting trip:', error);
@@ -41,7 +38,12 @@ const Dashboard = () => {
     }
   };
 
-  // Logout: clear the token and go back to login.
+  // Open a trip's itinerary (the TripPlanner screen).
+  const openTrip = (tripId) => {
+    navigate(`/trip/${tripId}`);
+  };
+
+  // Logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
@@ -68,10 +70,12 @@ const Dashboard = () => {
         ) : (
           <div className="trips-grid">
             {trips.map((trip) => (
-              <div key={trip._id} className="trip-card">
+              // Clicking the card opens the planner. The delete button uses
+              // stopPropagation so clicking it does NOT also open the trip.
+              <div key={trip._id} className="trip-card" onClick={() => openTrip(trip._id)} style={{ cursor: 'pointer' }}>
                 <button
                   className="btn-delete-trip"
-                  onClick={() => handleDelete(trip._id)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(trip._id); }}
                   title="Delete trip"
                 >
                   🗑️
@@ -82,6 +86,9 @@ const Dashboard = () => {
                   <p><strong>To:</strong> {new Date(trip.endDate).toLocaleDateString()}</p>
                 </div>
                 {trip.budget && <p className="trip-budget"><strong>Budget:</strong> ${trip.budget}</p>}
+                <p className="open-hint" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>
+                  Click to plan your itinerary →
+                </p>
               </div>
             ))}
           </div>
