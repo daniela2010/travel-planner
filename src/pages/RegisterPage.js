@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api/api'; // our central axios instance
+import api from '../api/api';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
 
 function RegisterPage() {
@@ -9,6 +10,7 @@ function RegisterPage() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth(); // reuse login() to sign the user in after registering
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -16,14 +18,12 @@ function RegisterPage() {
     try {
       const response = await api.post('/register', { name, email, password });
 
-      // The server now returns a token on register too, so we log the user in directly.
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('userName', response.data.user.name);
+      // Server returns a token on register, so log the user in via Context.
+      login(response.data.token, response.data.user);
 
       setMessage('Registration successful! Redirecting...');
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (error) {
-      // Show the real server message when available (e.g. "email already registered").
       if (error.response && error.response.data) {
         setMessage(error.response.data.message);
       } else {

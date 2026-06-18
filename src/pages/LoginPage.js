@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api/api'; // our central axios instance (auto-attaches the token)
+import api from '../api/api';
+import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -8,19 +9,16 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth(); // get the login function from Context
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      // Note: baseURL is set in api.js, so we only write the path here.
       const response = await api.post('/login', { email, password });
 
-      // Save the JWT token. Every future request will send it automatically.
-      localStorage.setItem('token', response.data.token);
-
-      // Optional: keep some user info handy for the UI (e.g. showing the name).
-      localStorage.setItem('userName', response.data.user.name);
+      // Store the token + user through Context (it also saves to localStorage).
+      login(response.data.token, response.data.user);
 
       setMessage('Login successful! Redirecting...');
       setTimeout(() => navigate('/dashboard'), 1000);

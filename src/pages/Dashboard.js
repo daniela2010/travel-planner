@@ -1,52 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/api'; // our central axios instance (auto-attaches the token)
+import { useSelector, useDispatch } from 'react-redux'; // Redux hooks
+import { fetchTrips, deleteTrip } from '../store/tripsSlice';
+import { useAuth } from '../context/AuthContext'; // Context hook
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [trips, setTrips] = useState([]);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Fetch the trips as soon as the page loads.
+  // Read trips from the Redux store instead of local component state.
+  // useSelector picks the piece of the store we care about.
+  const { items: trips, loading } = useSelector((state) => state.trips);
+
+  // Read the logged-in user + logout function from Context.
+  const { user, logout } = useAuth();
+
+  // On load, ask Redux to fetch the trips (dispatch runs the thunk).
   useEffect(() => {
-    const fetchTrips = async () => {
-      try {
-        const response = await api.get('/trips');
-        setTrips(response.data);
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          navigate('/login');
-          return;
-        }
-        console.error('Error fetching trips:', error);
-      }
-    };
+    dispatch(fetchTrips());
+  }, [dispatch]);
 
-    fetchTrips();
-  }, [navigate]);
-
-  // Delete a trip
-  const handleDelete = async (tripId) => {
+  const handleDelete = (tripId) => {
     if (window.confirm('Are you sure you want to delete this trip?')) {
-      try {
-        await api.delete(`/trips/${tripId}`);
-        setTrips(trips.filter((trip) => trip._id !== tripId));
-      } catch (error) {
-        console.error('Error deleting trip:', error);
-        alert('Failed to delete trip. Please try again.');
-      }
+      // Dispatch the delete thunk; the store updates the list automatically.
+      dispatch(deleteTrip(tripId));
     }
   };
 
-  // Open a trip's itinerary (the TripPlanner screen).
   const openTrip = (tripId) => {
     navigate(`/trip/${tripId}`);
   };
 
-  // Logout
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userName');
+    logout();              // clears token + user via Context
     navigate('/login');
   };
 
@@ -55,13 +42,16 @@ const Dashboard = () => {
       <button className="btn-logout" onClick={handleLogout}>Logout</button>
       <div className="dashboard-content-wrapper">
         <header className="dashboard-header">
-          <h1>My Journeys</h1>
+          {/* Greet the user by name, taken from Context */}
+          <h1>{user ? `${user.name}'s Journeys` : 'My Journeys'}</h1>
           <div className="header-actions">
             <button className="btn-add-trip" onClick={() => navigate('/add-trip')}>+ New Trip</button>
           </div>
         </header>
 
-        {trips.length === 0 ? (
+        {loading ? (
+          <p>Loading your trips...</p>
+        ) : trips.length === 0 ? (
           <div className="empty-state">
             <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>📍</div>
             <p>You haven't planned any trips yet.</p>
@@ -70,8 +60,6 @@ const Dashboard = () => {
         ) : (
           <div className="trips-grid">
             {trips.map((trip) => (
-              // Clicking the card opens the planner. The delete button uses
-              // stopPropagation so clicking it does NOT also open the trip.
               <div key={trip._id} className="trip-card" onClick={() => openTrip(trip._id)} style={{ cursor: 'pointer' }}>
                 <button
                   className="btn-delete-trip"
