@@ -26,6 +26,7 @@ const Activity = require('./models/Activity');
 const authMiddleware = require('./middleware/Auth');
 const validate = require('./middleware/validate');
 const errorHandler = require('./middleware/errorHandler');
+const upload = require('./middleware/upload'); // Multer
 
 // Validation schemas + custom error class
 const { registerSchema, loginSchema, tripSchema, activitySchema } = require('./validators/schemas');
@@ -41,7 +42,6 @@ function createToken(user) {
 }
 
 // Helper: load a trip and make sure it belongs to the logged-in user.
-// Returns the trip if OK, or throws an AppError. Reused by the activity routes.
 async function getOwnedTrip(tripId, userId) {
     const trip = await Trip.findById(tripId);
     if (!trip) {
@@ -52,16 +52,14 @@ async function getOwnedTrip(tripId, userId) {
     }
     return trip;
 }
-
 // AUTH ROUTES (public)
 
-// Register a new user
 app.post('/api/register', validate(registerSchema), async (req, res, next) => {
     try {
         const user = new User({
             name: req.body.name,
             email: req.body.email,
-            password: req.body.password // hashed automatically by the model's pre-save hook
+            password: req.body.password
         });
 
         const savedUser = await user.save();
@@ -80,7 +78,6 @@ app.post('/api/register', validate(registerSchema), async (req, res, next) => {
     }
 });
 
-// Login an existing user
 app.post('/api/login', validate(loginSchema), async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -108,7 +105,6 @@ app.post('/api/login', validate(loginSchema), async (req, res, next) => {
 });
 
 // TRIP ROUTES (protected)
-// Create a new trip
 app.post('/api/trips', authMiddleware, validate(tripSchema), async (req, res, next) => {
     try {
         const newTrip = new Trip({
@@ -126,7 +122,6 @@ app.post('/api/trips', authMiddleware, validate(tripSchema), async (req, res, ne
     }
 });
 
-// Get all trips that belong to the logged-in user
 app.get('/api/trips', authMiddleware, async (req, res, next) => {
     try {
         const trips = await Trip.find({ userId: req.user.id });
@@ -136,7 +131,6 @@ app.get('/api/trips', authMiddleware, async (req, res, next) => {
     }
 });
 
-// Get a SINGLE trip by id (used by the TripPlanner screen header)
 app.get('/api/trips/:id', authMiddleware, async (req, res, next) => {
     try {
         const trip = await getOwnedTrip(req.params.id, req.user.id);
@@ -146,29 +140,22 @@ app.get('/api/trips/:id', authMiddleware, async (req, res, next) => {
     }
 });
 
-// Delete a trip (and all of its activities)
 app.delete('/api/trips/:id', authMiddleware, async (req, res, next) => {
     try {
         const trip = await getOwnedTrip(req.params.id, req.user.id);
-
-        // Clean up: remove the trip's activities too, so we don't leave orphans.
         await Activity.deleteMany({ tripId: trip._id });
         await trip.deleteOne();
-
         res.json({ message: 'Trip deleted successfully' });
     } catch (error) {
         next(error);
     }
 });
-
 // ACTIVITY ROUTES (protected, nested under a trip)
-// URL pattern: /api/trips/:tripId/activities
-// Every route first checks that the trip belongs to the logged-in user.
 
-// Get all activities for a given trip
+// Get all activities for a trip (image bytes are NOT included - see model)
 app.get('/api/trips/:tripId/activities', authMiddleware, async (req, res, next) => {
     try {
-        await getOwnedTrip(req.params.tripId, req.user.id); // ownership check
+        await getOwnedTrip(req.params.tripId, req.user.id);
         const activities = await Activity.find({ tripId: req.params.tripId }).sort({ day: 1, time: 1 });
         res.json(activities);
     } catch (error) {
@@ -176,10 +163,10 @@ app.get('/api/trips/:tripId/activities', authMiddleware, async (req, res, next) 
     }
 });
 
-// Create a new activity inside a trip
+// Create a new activity
 app.post('/api/trips/:tripId/activities', authMiddleware, validate(activitySchema), async (req, res, next) => {
     try {
-        await getOwnedTrip(req.params.tripId, req.user.id); // ownership check
+        await getOwnedTrip(req.params.tripId, req.user.id);
 
         const newActivity = new Activity({
             tripId: req.params.tripId,
@@ -197,14 +184,44 @@ app.post('/api/trips/:tripId/activities', authMiddleware, validate(activitySchem
     }
 });
 
+// UPDATE (edit) an activity
+app.put('/api/trips/:tripId/activities/:activityId', authMiddleware, validate(activitySchema), async (req, res, next) => {
+    try {
+        await getOwnedTrip(req.params.tripId, req.user.id);
+
+        // findOneAndUpdate finds the activity and applies the new values.
+        // { returnDocument: 'after' } returns the UPDATED document (not the old one).
+        // { runValidators: true } re-checks the model's rules on update.
+        const updated = await Activity.findOneAndUpdate(
+            { _id: req.params.activityId, tripId: req.params.tripId },
+            {
+                day: req.body.day,
+                time: req.body.time,
+                title: req.body.title,
+                type: req.body.type,
+                notes: req.body.notes
+            },
+            { returnDocument: 'after', runValidators: true }
+        );
+
+        if (!updated) {
+            return next(new AppError('Activity not found', 404));
+        }
+
+        res.json(updated);
+    } catch (error) {
+        next(error);
+    }
+});
+
 // Delete a single activity
 app.delete('/api/trips/:tripId/activities/:activityId', authMiddleware, async (req, res, next) => {
     try {
-        await getOwnedTrip(req.params.tripId, req.user.id); // ownership check
+        await getOwnedTrip(req.params.tripId, req.user.id);
 
         const activity = await Activity.findOne({
             _id: req.params.activityId,
-            tripId: req.params.tripId // make sure the activity really belongs to this trip
+            tripId: req.params.tripId
         });
 
         if (!activity) {
@@ -213,6 +230,64 @@ app.delete('/api/trips/:tripId/activities/:activityId', authMiddleware, async (r
 
         await activity.deleteOne();
         res.json({ message: 'Activity deleted successfully' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// UPLOAD a photo for an activity (Multer)
+// upload.single('image') parses one file from a field named "image".
+// After it runs, the file is available at req.file (with .buffer + .mimetype).
+app.post('/api/trips/:tripId/activities/:activityId/image', authMiddleware, upload.single('image'), async (req, res, next) => {
+    try {
+        await getOwnedTrip(req.params.tripId, req.user.id);
+
+        if (!req.file) {
+            return next(new AppError('No image file was uploaded', 400));
+        }
+
+        // Save the image as two top-level fields. Top-level Buffer fields
+        // persist reliably (a nested "image.data" with select:false did not).
+        const updated = await Activity.findOneAndUpdate(
+            { _id: req.params.activityId, tripId: req.params.tripId },
+            {
+                $set: {
+                    imageData: req.file.buffer,
+                    imageType: req.file.mimetype,
+                    hasImage: true
+                }
+            },
+            { returnDocument: 'after' }
+        );
+
+        if (!updated) {
+            return next(new AppError('Activity not found', 404));
+        }
+
+        res.json({ message: 'Image uploaded successfully', hasImage: true });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// SERVE an activity's photo back
+// Returns the raw image with the correct Content-Type so an <img> tag can
+// point straight at this URL. We must explicitly select the hidden fields.
+app.get('/api/trips/:tripId/activities/:activityId/image', authMiddleware, async (req, res, next) => {
+    try {
+        await getOwnedTrip(req.params.tripId, req.user.id);
+
+        const activity = await Activity.findOne({
+            _id: req.params.activityId,
+            tripId: req.params.tripId
+        }).select('+imageData +imageType'); // include the hidden image fields
+
+        if (!activity || !activity.imageData) {
+            return next(new AppError('Image not found', 404));
+        }
+
+        res.set('Content-Type', activity.imageType);
+        res.send(activity.imageData);
     } catch (error) {
         next(error);
     }
