@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/api';
+import ActivityCard from '../components/ActivityCard';
 import './TripPlanner.css';
 
 const TripPlanner = () => {
@@ -14,18 +15,13 @@ const TripPlanner = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // "Add" form
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ time: '', title: '', type: 'Attraction', notes: '' });
 
-  // "Edit" form: holds the id of the activity being edited (null = not editing)
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ time: '', title: '', type: 'Attraction', notes: '' });
 
-  // Holds blob URLs for activity images we've loaded, keyed by activity id.
   const [imageUrls, setImageUrls] = useState({});
-
-  // Holds the image URL currently shown enlarged in the popup (null = closed).
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
   // Load the trip and its activities
@@ -50,10 +46,7 @@ const TripPlanner = () => {
     loadData();
   }, [tripId, navigate]);
 
-  // Load an activity's image as a blob URL
-  // The image route is protected (needs the token), so a plain <img src> won't
-  // work. We fetch it via axios (token attached automatically), get binary
-  // data, and create a temporary in-browser URL for the <img> to display.
+  // Load activity images as blob URLs (protected route needs the token)
   useEffect(() => {
     const loadImages = async () => {
       for (const activity of activities) {
@@ -61,12 +54,12 @@ const TripPlanner = () => {
           try {
             const res = await api.get(
               `/trips/${tripId}/activities/${activity._id}/image`,
-              { responseType: 'blob' } // tell axios to expect binary data
+              { responseType: 'blob' }
             );
             const url = URL.createObjectURL(res.data);
             setImageUrls((prev) => ({ ...prev, [activity._id]: url }));
           } catch (err) {
-            // If one image fails, just skip it - don't break the page.
+            // skip a failed image, don't break the page
           }
         }
       }
@@ -75,21 +68,33 @@ const TripPlanner = () => {
     if (activities.length > 0) {
       loadImages();
     }
-    // We intentionally depend on "activities" so newly added ones get loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activities, tripId]);
 
-  const getNumberOfDays = () => {
+  // useMemo: number of days
+  // useMemo caches a calculated value and only recomputes it when its inputs
+  // change. Here the day count only depends on the trip's dates, so it won't
+  // be recalculated on every keystroke or re-render.
+  const numberOfDays = useMemo(() => {
     if (!trip) return 1;
     const start = new Date(trip.startDate);
     const end = new Date(trip.endDate);
     const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
     return diffDays > 0 ? diffDays : 1;
-  };
+  }, [trip]);
 
-  const numberOfDays = getNumberOfDays();
-  const tripDays = Array.from({ length: numberOfDays }, (_, i) => i + 1);
-  const activitiesForSelectedDay = activities.filter((a) => a.day === selectedDay);
+  const tripDays = useMemo(
+    () => Array.from({ length: numberOfDays }, (_, i) => i + 1),
+    [numberOfDays]
+  );
+
+  // useMemo: activities for the selected day
+  // Filtering only needs to redo when the activities list or selected day
+  // changes - not when we type in a form. useMemo avoids that wasted work.
+  const activitiesForSelectedDay = useMemo(
+    () => activities.filter((a) => a.day === selectedDay),
+    [activities, selectedDay]
+  );
 
   // Add a new activity
   const handleAddActivity = async (e) => {
@@ -102,7 +107,7 @@ const TripPlanner = () => {
         type: form.type,
         notes: form.notes
       });
-      setActivities([...activities, response.data]);
+      setActivities((prev) => [...prev, response.data]);
       setForm({ time: '', title: '', type: 'Attraction', notes: '' });
       setShowForm(false);
     } catch (err) {
@@ -110,8 +115,10 @@ const TripPlanner = () => {
     }
   };
 
-  // Start editing: open the edit form pre-filled with current values
-  const startEdit = (activity) => {
+  // Handlers passed to the memoized ActivityCard
+  // useCallback keeps these functions "stable" between renders, so React.memo
+  // can correctly skip re-rendering cards whose data hasn't changed.
+  const startEdit = useCallback((activity) => {
     setEditingId(activity._id);
     setEditForm({
       time: activity.time,
@@ -119,9 +126,45 @@ const TripPlanner = () => {
       type: activity.type,
       notes: activity.notes || ''
     });
-  };
+  }, []);
 
-  // Save edits (PUT request)
+  const handleDeleteActivity = useCallback(async (activityId) => {
+    try {
+      await api.delete(`/trips/${tripId}/activities/${activityId}`);
+      setActivities((prev) => prev.filter((a) => a._id !== activityId));
+    } catch (err) {
+      setError('Could not delete activity.');
+    }
+  }, [tripId]);
+
+  const handleImageUpload = useCallback(async (activityId, file) => {
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      await api.post(
+        `/trips/${tripId}/activities/${activityId}/image`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      setActivities((prev) => prev.map((a) => (a._id === activityId ? { ...a, hasImage: true } : a)));
+      setImageUrls((prev) => {
+        const copy = { ...prev };
+        delete copy[activityId];
+        return copy;
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not upload image.');
+    }
+  }, [tripId]);
+
+  const handleEnlarge = useCallback((url) => {
+    setLightboxUrl(url);
+  }, []);
+
+  // Save edits (PUT)
   const handleUpdateActivity = async (e) => {
     e.preventDefault();
     try {
@@ -135,52 +178,16 @@ const TripPlanner = () => {
           notes: editForm.notes
         }
       );
-      // Replace the edited activity in our local list with the updated one.
-      setActivities(activities.map((a) => (a._id === editingId ? { ...response.data, hasImage: a.hasImage } : a)));
+      setActivities((prev) =>
+        prev.map((a) => (a._id === editingId ? { ...response.data, hasImage: a.hasImage } : a))
+      );
       setEditingId(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not update activity.');
     }
   };
 
-  // Delete an activity
-  const handleDeleteActivity = async (activityId) => {
-    try {
-      await api.delete(`/trips/${tripId}/activities/${activityId}`);
-      setActivities(activities.filter((a) => a._id !== activityId));
-    } catch (err) {
-      setError('Could not delete activity.');
-    }
-  };
-
-  // Upload a photo for an activity
-  const handleImageUpload = async (activityId, file) => {
-    if (!file) return;
-    try {
-      // FormData is the format required for file uploads (multipart/form-data).
-      const formData = new FormData();
-      formData.append('image', file); // field name must match upload.single('image')
-
-      await api.post(
-        `/trips/${tripId}/activities/${activityId}/image`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-
-      // Mark this activity as having an image, and clear any old cached URL
-      // so the effect re-fetches and shows the new photo.
-      setActivities(activities.map((a) => (a._id === activityId ? { ...a, hasImage: true } : a)));
-      setImageUrls((prev) => {
-        const copy = { ...prev };
-        delete copy[activityId];
-        return copy;
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not upload image.');
-    }
-  };
-
-  // --- Render ---
+  // Render
   if (loading) {
     return <div className="planner-container"><p>Loading your itinerary...</p></div>;
   }
@@ -249,10 +256,10 @@ const TripPlanner = () => {
             {activitiesForSelectedDay.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>No activities planned for this day yet.</p>
             ) : (
-              activitiesForSelectedDay.map((activity) => (
-                <div key={activity._id} className="activity-card">
-                  {editingId === activity._id ? (
-                    // --- EDIT MODE: inline form replaces the card content ---
+              activitiesForSelectedDay.map((activity) =>
+                editingId === activity._id ? (
+                  // --- EDIT MODE: inline form (kept in the parent) ---
+                  <div key={activity._id} className="activity-card">
                     <form className="activity-form" style={{ width: '100%' }} onSubmit={handleUpdateActivity}>
                       <input type="time" value={editForm.time} onChange={(e) => setEditForm({ ...editForm, time: e.target.value })} required />
                       <input type="text" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} required />
@@ -267,51 +274,26 @@ const TripPlanner = () => {
                       <button type="submit" className="btn-add-activity">Save</button>
                       <button type="button" className="btn-primary-outline" onClick={() => setEditingId(null)}>Cancel</button>
                     </form>
-                  ) : (
-                    // VIEW MODE: normal card
-                    <>
-                      <div className="activity-time">{activity.time}</div>
-                      <div className="activity-details">
-                        <h4>{activity.title}</h4>
-                        <span className="badge">{activity.type}</span>
-                        {activity.notes && <p className="activity-notes">{activity.notes}</p>}
-
-                        {/* Show the photo if we've loaded it. Click to enlarge. */}
-                        {activity.hasImage && imageUrls[activity._id] && (
-                          <img
-                            src={imageUrls[activity._id]}
-                            alt="ticket or confirmation"
-                            className="activity-image"
-                            onClick={() => setLightboxUrl(imageUrls[activity._id])}
-                          />
-                        )}
-
-                        {/* Upload control */}
-                        <label className="upload-label">
-                          {activity.hasImage ? '🖼️ Change photo' : '📎 Attach photo'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={(e) => handleImageUpload(activity._id, e.target.files[0])}
-                          />
-                        </label>
-                      </div>
-                      <div className="activity-actions">
-                        <button className="btn-icon" title="Edit" onClick={() => startEdit(activity)}>✏️</button>
-                        <button className="btn-icon" title="Delete" onClick={() => handleDeleteActivity(activity._id)}>🗑️</button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))
+                  </div>
+                ) : (
+                  // VIEW MODE: memoized card
+                  <ActivityCard
+                    key={activity._id}
+                    activity={activity}
+                    imageUrl={imageUrls[activity._id]}
+                    onEdit={startEdit}
+                    onDelete={handleDeleteActivity}
+                    onUpload={handleImageUpload}
+                    onEnlarge={handleEnlarge}
+                  />
+                )
+              )
             )}
           </div>
         </main>
       </div>
 
-      {/* Lightbox popup: shows the clicked photo full size. */}
-      {/* Clicking anywhere on the dark overlay closes it. */}
+      {/* Lightbox popup */}
       {lightboxUrl && (
         <div className="lightbox-overlay" onClick={() => setLightboxUrl(null)}>
           <img src={lightboxUrl} alt="enlarged" className="lightbox-image" />
