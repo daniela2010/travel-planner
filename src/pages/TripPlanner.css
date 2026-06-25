@@ -12,14 +12,28 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-lg);
-  background-color: white;
-  padding: var(--space-lg);
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  padding: var(--space-lg) calc(var(--space-lg) * 1.2);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
 }
 
-.header-info h1 { margin: 0 0 8px 0; color: var(--text-main); }
-.header-info p { margin: 0; color: var(--text-muted); }
+.header-info h1 { margin: 0 0 6px 0; color: white; font-size: 1.8rem; }
+.header-info p { margin: 0; color: rgba(255,255,255,0.8); font-size: 0.95rem; }
+
+.planner-header .btn-primary-outline {
+  background-color: rgba(255,255,255,0.15);
+  color: white;
+  border-color: rgba(255,255,255,0.5);
+  margin-top: 0;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  transition: background-color 0.2s;
+}
+.planner-header .btn-primary-outline:hover {
+  background-color: rgba(255,255,255,0.25);
+  box-shadow: none;
+}
 
 /* --- פריסת הרשת (Grid Layout) --- */
 .planner-layout {
@@ -254,6 +268,20 @@
   transform: scale(1.03);
 }
  
+/* Colored left border on activity card by type */
+.activity-card[data-type="Food"]       { border-left: 4px solid #16a34a; }
+.activity-card[data-type="Transport"]  { border-left: 4px solid #7c3aed; }
+.activity-card[data-type="Attraction"] { border-left: 4px solid #2563eb; }
+.activity-card[data-type="Lodging"]    { border-left: 4px solid #ea580c; }
+.activity-card[data-type="Other"]      { border-left: 4px solid #94a3b8; }
+
+/* Colored badge chips by type */
+.badge[data-type="Food"]       { background-color: #dcfce7; color: #16a34a; }
+.badge[data-type="Transport"]  { background-color: #ede9fe; color: #7c3aed; }
+.badge[data-type="Attraction"] { background-color: #dbeafe; color: #1d4ed8; }
+.badge[data-type="Lodging"]    { background-color: #ffedd5; color: #ea580c; }
+.badge[data-type="Other"]      { background-color: #f1f5f9; color: #64748b; }
+
 /* The dark full-screen overlay behind the enlarged image */
 .lightbox-overlay {
   position: fixed;

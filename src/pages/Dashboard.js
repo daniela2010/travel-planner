@@ -12,7 +12,6 @@ const Dashboard = () => {
   const { items: trips, loading } = useSelector((state) => state.trips);
   const { user, logout } = useAuth();
 
-  // Which trip is being edited (null = none), plus the edit form values.
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ destination: '', startDate: '', endDate: '', budget: '' });
   const [editError, setEditError] = useState('');
@@ -36,16 +35,13 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  // Date inputs need the "YYYY-MM-DD" format. Trip dates come as ISO strings,
-  // so we slice off just the date part to pre-fill the edit form.
   const toDateInput = (isoString) => {
     if (!isoString) return '';
     return new Date(isoString).toISOString().split('T')[0];
   };
 
-  // Open the edit form for a trip, pre-filled with its current values.
   const startEdit = (e, trip) => {
-    e.stopPropagation(); // don't also open the trip
+    e.stopPropagation();
     setEditError('');
     setEditingId(trip._id);
     setEditForm({
@@ -56,7 +52,6 @@ const Dashboard = () => {
     });
   };
 
-  // Save the edits via the Redux thunk.
   const handleUpdate = async (e) => {
     e.preventDefault();
     setEditError('');
@@ -67,7 +62,6 @@ const Dashboard = () => {
     }
 
     try {
-      // unwrap() lets us catch a rejected thunk here with try/catch.
       await dispatch(updateTrip({ id: editingId, tripData: editForm })).unwrap();
       setEditingId(null);
     } catch (err) {
@@ -77,17 +71,17 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <button className="btn-logout" onClick={handleLogout}>Logout</button>
-      <div className="dashboard-content-wrapper">
-        <header className="dashboard-header">
-          <h1>{user ? `${user.name}'s Journeys` : 'My Journeys'}</h1>
-          <div className="header-actions">
-            <button className="btn-add-trip" onClick={() => navigate('/add-trip')}>+ New Trip</button>
-          </div>
-        </header>
+      <div className="dashboard-hero">
+        <h1>{user ? `${user.name}'s Journeys` : 'My Journeys'}</h1>
+        <div className="hero-actions">
+          <button className="btn-add-trip" onClick={() => navigate('/add-trip')}>+ New Trip</button>
+          <button className="btn-logout" onClick={handleLogout}>Logout</button>
+        </div>
+      </div>
 
+      <div className="dashboard-content-wrapper">
         {loading ? (
-          <p>Loading your trips...</p>
+          <p className="loading-text">Loading your trips...</p>
         ) : trips.length === 0 ? (
           <div className="empty-state">
             <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>📍</div>
@@ -98,73 +92,64 @@ const Dashboard = () => {
           <div className="trips-grid">
             {trips.map((trip) =>
               editingId === trip._id ? (
-                // --- EDIT MODE: inline form on the card ---
-                <div key={trip._id} className="trip-card" style={{ cursor: 'default' }}>
-                  <form className="trip-edit-form" onSubmit={handleUpdate}>
-                    <label>Destination</label>
-                    <input
-                      type="text"
-                      value={editForm.destination}
-                      onChange={(e) => setEditForm({ ...editForm, destination: e.target.value })}
-                      required
-                    />
-                    <label>Start Date</label>
-                    <input
-                      type="date"
-                      value={editForm.startDate}
-                      onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
-                      required
-                    />
-                    <label>End Date</label>
-                    <input
-                      type="date"
-                      value={editForm.endDate}
-                      onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
-                      required
-                    />
-                    <label>Budget ($)</label>
-                    <input
-                      type="number"
-                      value={editForm.budget}
-                      onChange={(e) => setEditForm({ ...editForm, budget: e.target.value })}
-                    />
+                <div key={trip._id} className="trip-card">
+                  <div className="trip-card-accent" />
+                  <div className="trip-card-body">
+                    <p className="edit-card-title">Editing trip</p>
+                    <form className="trip-edit-form" onSubmit={handleUpdate}>
+                      <label>Destination</label>
+                      <input
+                        type="text"
+                        value={editForm.destination}
+                        onChange={(e) => setEditForm({ ...editForm, destination: e.target.value })}
+                        required
+                      />
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={editForm.startDate}
+                        onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                        required
+                      />
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={editForm.endDate}
+                        onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                        required
+                      />
+                      <label>Budget ($)</label>
+                      <input
+                        type="number"
+                        value={editForm.budget}
+                        onChange={(e) => setEditForm({ ...editForm, budget: e.target.value })}
+                      />
 
-                    {editError && <p style={{ color: 'red', fontSize: '0.85rem' }}>{editError}</p>}
+                      {editError && <p className="edit-error">{editError}</p>}
 
-                    <div className="trip-edit-actions">
-                      <button type="submit" className="btn-add-trip">Save</button>
-                      <button type="button" className="btn-primary-outline" onClick={() => setEditingId(null)}>Cancel</button>
-                    </div>
-                  </form>
+                      <div className="trip-edit-actions">
+                        <button type="submit" className="btn-save">Save</button>
+                        <button type="button" className="btn-cancel" onClick={() => setEditingId(null)}>Cancel</button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               ) : (
-                // --- VIEW MODE ---
                 <div key={trip._id} className="trip-card" onClick={() => openTrip(trip._id)} style={{ cursor: 'pointer' }}>
-                  <div className="trip-card-buttons">
-                    <button
-                      className="btn-edit-trip"
-                      onClick={(e) => startEdit(e, trip)}
-                      title="Edit trip"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="btn-delete-trip"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(trip._id); }}
-                      title="Delete trip"
-                    >
-                      🗑️
-                    </button>
+                  <div className="trip-card-accent" />
+                  <div className="trip-card-body">
+                    <div className="trip-card-buttons">
+                      <button className="btn-edit-trip" onClick={(e) => startEdit(e, trip)} title="Edit trip">✏️</button>
+                      <button className="btn-delete-trip" onClick={(e) => { e.stopPropagation(); handleDelete(trip._id); }} title="Delete trip">🗑️</button>
+                    </div>
+                    <h3>{trip.destination}</h3>
+                    <div className="trip-dates">
+                      <p><strong>From:</strong> {new Date(trip.startDate).toLocaleDateString()}</p>
+                      <p><strong>To:</strong> {new Date(trip.endDate).toLocaleDateString()}</p>
+                    </div>
+                    {trip.budget && <p className="trip-budget">💰 ${trip.budget}</p>}
+                    <p className="open-hint">Click to plan your itinerary →</p>
                   </div>
-                  <h3>{trip.destination}</h3>
-                  <div className="trip-dates">
-                    <p><strong>From:</strong> {new Date(trip.startDate).toLocaleDateString()}</p>
-                    <p><strong>To:</strong> {new Date(trip.endDate).toLocaleDateString()}</p>
-                  </div>
-                  {trip.budget && <p className="trip-budget"><strong>Budget:</strong> ${trip.budget}</p>}
-                  <p className="open-hint" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>
-                    Click to plan your itinerary →
-                  </p>
                 </div>
               )
             )}

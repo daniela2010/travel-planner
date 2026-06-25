@@ -1,35 +1,51 @@
 .add-trip-container {
   min-height: 100vh;
   background-color: #f1f5f9;
-  padding: var(--space-lg);
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  padding: var(--space-lg);
 }
 
 .add-trip-card {
   background-color: white;
   width: 100%;
-  max-width: 600px;
+  max-width: 560px;
   border-radius: var(--radius);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
   margin-top: 40px;
 }
 
-.add-trip-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e2e8f0;
+/* Gradient hero section at the top of the card */
+.add-trip-hero {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  text-align: center;
+  padding: 36px 24px 28px;
 }
 
-.add-trip-header h2 {
-  color: var(--text-main);
+.hero-icon {
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.add-trip-hero h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.add-trip-hero p {
   margin: 0;
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+
+/* White body below hero */
+.add-trip-body {
+  padding: 24px 28px 28px;
 }
 
 .btn-back {
@@ -37,37 +53,97 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
+  font-size: 0.85rem;
   font-weight: 500;
-  text-decoration: underline;
+  padding: 0;
+  margin-bottom: 20px;
+  display: inline-block;
+  transition: color 0.15s;
 }
 
 .btn-back:hover {
   color: var(--primary-blue);
 }
 
-.add-trip-form .form-row {
+/* Form layout */
+.add-trip-form {
   display: flex;
-  gap: 15px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.add-trip-form .half-width {
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.input-group input,
+.add-trip-form input {
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input-group input:focus,
+.add-trip-form input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.half-width {
   flex: 1;
+}
+
+.status-message {
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.status-message.success {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-message.error {
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 
 .btn-submit-trip {
   width: 100%;
   background-color: var(--primary-blue);
   color: white;
-  padding: 14px;
+  padding: 13px;
   border: none;
-  border-radius: 6px;
-  font-size: 1.05rem;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 20px;
-  transition: background-color 0.2s;
+  margin-top: 4px;
+  transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .btn-submit-trip:hover {
   background-color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }

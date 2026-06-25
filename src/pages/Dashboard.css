@@ -1,200 +1,284 @@
-/* הרקע של כל הדף */
 .dashboard-container {
   min-height: 100vh;
   background-color: #f1f5f9;
-  padding: var(--space-lg);
-  position: relative;
 }
 
-/* ה"קופסה" הלבנה שמרכזת את התוכן */
-.dashboard-content-wrapper {
-  max-width: 1000px;
-  margin: 0 auto;
-  background-color: white;
-  border-radius: var(--radius);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-sm); /* צל עדין כדי לתת עומק */
-  min-height: 70vh; /* שיהיה לה גובה גם כשהיא ריקה */
-}
-
-/* עיצוב הכותרת בתוך הקופסה */
-.dashboard-header {
+/* Gradient hero header — matches AddTrip and TripPlanner */
+.dashboard-hero {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  padding: 28px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid #f1f5f9; /* קו הפרדה עדין */
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
 }
 
-/* שאר העיצובים של הכפתורים נשארים אותו דבר */
-.btn-add-trip {
-  background-color: var(--primary-blue);
+.dashboard-hero h1 {
+  margin: 0;
   color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-add-trip {
+  background-color: white;
+  color: var(--primary-blue);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius);
   font-weight: 600;
   cursor: pointer;
+  font-size: 0.95rem;
+  transition: box-shadow 0.2s;
 }
 
+.btn-add-trip:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-logout {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Content area below the hero */
+.dashboard-content-wrapper {
+  max-width: 1000px;
+  margin: 36px auto;
+  padding: 0 var(--space-lg);
+}
+
+.loading-text {
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 60px;
+}
+
+/* Empty state */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   color: var(--text-muted);
 }
 
-/* עיצוב הכפתור "Start your first adventure" */
 .btn-primary-outline {
-  background-color: transparent; /* רקע שקוף */
-  color: var(--primary-blue);   /* טקסט בצבע הכחול שהגדרנו */
-  border: 2px solid var(--primary-blue); /* מסגרת כחולה */
-  padding: 12px 28px;
+  background-color: transparent;
+  color: var(--primary-blue);
+  border: 2px solid var(--primary-blue);
+  padding: 11px 28px;
   border-radius: var(--radius);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease-in-out; /* אפקט מעבר חלק */
+  transition: all 0.2s ease-in-out;
   margin-top: var(--space-md);
 }
 
-/* אפקט כשמעבירים את העכבר על הכפתור */
 .btn-primary-outline:hover {
-  background-color: var(--primary-blue); /* הרקע הופך לכחול */
-  color: white; /* הטקסט הופך ללבן */
-  box-shadow: var(--shadow-md); /* הוספת צל מרחף */
+  background-color: var(--primary-blue);
+  color: white;
+  box-shadow: var(--shadow-md);
 }
 
-/* רשת הטיולים - מסדרת את הכרטיסיות יפה אחת ליד השנייה */
+/* Trip card grid */
 .trips-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  margin-top: 20px;
 }
 
-/* הכרטיסייה עצמה */
+/* Card shell */
 .trip-card {
-  position: relative;
-  border: 1px solid #e2e8f0;
+  background: white;
   border-radius: var(--radius);
-  padding: var(--space-md);
+  border: 1px solid #e2e8f0;
   box-shadow: var(--shadow-sm);
-  background-color: #ffffff;
+  overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 
-/* אנימציה קטנה של ריחוף כשמעבירים עכבר */
 .trip-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.trip-card h3 {
-  margin-top: 0;
+/* Colored top accent strip */
+.trip-card-accent {
+  height: 5px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+/* Card content padding */
+.trip-card-body {
+  padding: 16px;
+}
+
+/* Edit mode label */
+.edit-card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--primary-blue);
-  margin-bottom: 15px;
-  font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px 0;
+}
+
+/* Trip card view mode */
+.trip-card h3 {
+  margin: 0 0 12px 0;
+  color: var(--text-main);
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding-right: 56px;
 }
 
 .trip-dates p {
-  margin: 8px 0;
-  color: var(--text-main);
-  font-size: 0.95rem;
-}
-
-.trip-budget {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px dashed #cbd5e1;
-  color: #10b981;
-  font-weight: 600;
-}
-
-/* עיצוב כפתור המחיקה (פח האשפה) */
-.btn-delete-trip {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.btn-delete-trip:hover {
-  opacity: 1;
-  transform: scale(1.1); 
-  filter: grayscale(0%) sepia(100%) hue-rotate(-50deg) saturate(500%);
-}
-
-.header-actions {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-/* Logout button */
-.btn-logout {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: transparent;
+  margin: 5px 0;
   color: var(--text-muted);
-  border: 1px solid #cbd5e1;
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
   font-size: 0.9rem;
 }
 
-.btn-logout:hover {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-color: #fca5a5;
+.trip-budget {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  color: #16a34a;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
-/* The container holding both buttons */
+.open-hint {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+/* Edit + delete icon buttons */
 .trip-card-buttons {
   position: absolute;
-  top: 12px;
+  top: 18px;
   right: 12px;
   display: flex;
-  gap: 10px;          /* space between the two buttons */
+  gap: 4px;
   align-items: center;
 }
 
-/* Both buttons - same clean style */
 .btn-edit-trip,
 .btn-delete-trip {
-  position: static;   /* override any old absolute positioning */
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.1rem;
-  padding: 4px;
-  opacity: 0.7;
-  transition: opacity 0.15s ease;
+  font-size: 1rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  opacity: 0.55;
+  transition: opacity 0.15s, background-color 0.15s;
 }
 
 .btn-edit-trip:hover,
 .btn-delete-trip:hover {
   opacity: 1;
+  background-color: #f1f5f9;
 }
 
+/* ── Edit form inside a card ── */
+.trip-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trip-edit-form label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trip-edit-form label:first-of-type {
+  margin-top: 0;
+}
+
+.trip-edit-form input {
+  padding: 8px 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.trip-edit-form input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.edit-error {
+  color: #b91c1c;
+  font-size: 0.82rem;
+  margin: 4px 0 0 0;
+  background-color: #fee2e2;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* Save / Cancel buttons in edit form */
 .trip-edit-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 12px;
 }
 
-.trip-edit-actions button {
+.btn-save,
+.btn-cancel {
   flex: 1;
-  padding: 5px 8px;
-  font-size: 0.8rem;
-  margin-top: 0;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, box-shadow 0.15s;
+}
+
+.btn-save {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+.btn-save:hover {
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35);
+}
+
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: var(--text-muted);
+}
+
+.btn-cancel:hover {
+  background-color: #e2e8f0;
 }

@@ -9,17 +9,13 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth(); // get the login function from Context
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const response = await api.post('/login', { email, password });
-
-      // Store the token + user through Context (it also saves to localStorage).
       login(response.data.token, response.data.user);
-
       setMessage('Login successful! Redirecting...');
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error) {
@@ -34,46 +30,51 @@ const LoginPage = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>Welcome to Travel Planner</h1>
-        <p className="subtitle">Please sign in to manage your journeys</p>
+        <div className="auth-hero">
+          <div className="hero-icon">✈️</div>
+          <h1>Travel Planner</h1>
+          <p>Sign in to manage your journeys</p>
+        </div>
 
-        <form className="login-form" onSubmit={handleLogin}>
-          <div className="input-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              placeholder="enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+        <div className="auth-body">
+          <form className="auth-form" onSubmit={handleLogin}>
+            <div className="input-group">
+              <label htmlFor="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className="input-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+            <div className="input-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
 
-          {message && (
-            <p className={`status-message ${message.includes('successful') ? 'success' : 'error'}`}>
-              {message}
-            </p>
-          )}
+            {message && (
+              <p className={`status-message ${message.includes('successful') ? 'success' : 'error'}`}>
+                {message}
+              </p>
+            )}
 
-          <button type="submit" className="btn-login">Sign In</button>
-        </form>
+            <button type="submit" className="btn-auth">Sign In</button>
+          </form>
 
-        <p className="signup-link">
-          Don't have an account? <Link to="/register">Sign Up</Link>
-        </p>
+          <p className="auth-switch">
+            Don't have an account? <Link to="/register">Sign Up</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

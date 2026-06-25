@@ -38,12 +38,16 @@ const AddTripPage = () => {
   return (
     <div className="add-trip-container">
       <div className="add-trip-card">
-        <header className="add-trip-header">
+        <div className="add-trip-hero">
+          <div className="hero-icon">✈️</div>
           <h2>Plan a New Adventure</h2>
-          <button className="btn-back" onClick={() => navigate('/dashboard')}>
-            Back to Dashboard
-          </button>
-        </header>
+          <p>Where are you headed next?</p>
+        </div>
+
+        <div className="add-trip-body">
+        <button className="btn-back" onClick={() => navigate('/dashboard')}>
+          ← Back to Dashboard
+        </button>
 
         <form className="add-trip-form" onSubmit={handleSubmit}>
           <div className="input-group">
@@ -98,6 +102,7 @@ const AddTripPage = () => {
 
           <button type="submit" className="btn-submit-trip">Create Trip</button>
         </form>
+        </div>
       </div>
     </div>
   );

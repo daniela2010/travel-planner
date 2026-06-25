@@ -10,12 +10,12 @@ import React from 'react';
 // keeps this component simple and easy for memo to compare.
 const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onEnlarge }) => {
   return (
-    <div className="activity-card">
+    <div className="activity-card" data-type={activity.type}>
       <div className="activity-time">{activity.time}</div>
 
       <div className="activity-details">
         <h4>{activity.title}</h4>
-        <span className="badge">{activity.type}</span>
+        <span className="badge" data-type={activity.type}>{activity.type}</span>
         {activity.notes && <p className="activity-notes">{activity.notes}</p>}
 
         {/* Show the photo if it has been loaded. Click to enlarge. */}
