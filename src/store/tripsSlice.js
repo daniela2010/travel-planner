@@ -23,6 +23,12 @@ export const addTrip = createAsyncThunk('trips/addTrip', async (tripData) => {
     return response.data;
 });
 
+// Update an existing trip
+export const updateTrip = createAsyncThunk('trips/updateTrip', async ({ id, tripData }) => {
+    const response = await api.put(`/trips/${id}`, tripData);
+    return response.data; // the updated trip
+});
+
 // Delete a trip by id
 export const deleteTrip = createAsyncThunk('trips/deleteTrip', async (tripId) => {
     await api.delete(`/trips/${tripId}`);
@@ -42,7 +48,7 @@ const tripsSlice = createSlice({
     // extraReducers handle the actions created by the thunks above.
     extraReducers: (builder) => {
         builder
-            // fetchTrips
+            // --- fetchTrips ---
             .addCase(fetchTrips.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -58,6 +64,14 @@ const tripsSlice = createSlice({
             // addTrip
             .addCase(addTrip.fulfilled, (state, action) => {
                 state.items.push(action.payload); // add the new trip to the list
+            })
+            // updateTrip
+            .addCase(updateTrip.fulfilled, (state, action) => {
+                // Replace the edited trip in the list with the updated version.
+                const index = state.items.findIndex((trip) => trip._id === action.payload._id);
+                if (index !== -1) {
+                    state.items[index] = action.payload;
+                }
             })
             // deleteTrip
             .addCase(deleteTrip.fulfilled, (state, action) => {

@@ -1,13 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 require('dotenv').config();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
+app.use(bodyParser.json());
 app.use(cors());
 
 mongoose.connect(process.env.DATABASE_URL);
@@ -51,8 +52,8 @@ async function getOwnedTrip(tripId, userId) {
     }
     return trip;
 }
-// AUTH ROUTES (public)
 
+// AUTH ROUTES (public)
 app.post('/api/register', validate(registerSchema), async (req, res, next) => {
     try {
         const user = new User({
@@ -139,6 +140,29 @@ app.get('/api/trips/:id', authMiddleware, async (req, res, next) => {
     }
 });
 
+// UPDATE (edit) a trip
+app.put('/api/trips/:id', authMiddleware, validate(tripSchema), async (req, res, next) => {
+    try {
+        // Ownership check: make sure this trip belongs to the logged-in user.
+        await getOwnedTrip(req.params.id, req.user.id);
+
+        const updated = await Trip.findByIdAndUpdate(
+            req.params.id,
+            {
+                destination: req.body.destination,
+                startDate: req.body.startDate,
+                endDate: req.body.endDate,
+                budget: req.body.budget
+            },
+            { returnDocument: 'after', runValidators: true }
+        );
+
+        res.json(updated);
+    } catch (error) {
+        next(error);
+    }
+});
+
 app.delete('/api/trips/:id', authMiddleware, async (req, res, next) => {
     try {
         const trip = await getOwnedTrip(req.params.id, req.user.id);
@@ -149,8 +173,8 @@ app.delete('/api/trips/:id', authMiddleware, async (req, res, next) => {
         next(error);
     }
 });
-// ACTIVITY ROUTES (protected, nested under a trip)
 
+// ACTIVITY ROUTES (protected, nested under a trip)
 // Get all activities for a trip (image bytes are NOT included - see model)
 app.get('/api/trips/:tripId/activities', authMiddleware, async (req, res, next) => {
     try {
@@ -183,7 +207,7 @@ app.post('/api/trips/:tripId/activities', authMiddleware, validate(activitySchem
     }
 });
 
-// UPDATE (edit) an activity
+// UPDATE (edit) an activity: completes full CRUD
 app.put('/api/trips/:tripId/activities/:activityId', authMiddleware, validate(activitySchema), async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -292,7 +316,7 @@ app.get('/api/trips/:tripId/activities/:activityId/image', authMiddleware, async
     }
 });
 
-// GLOBAL ERROR HANDLER (must be after all routes)
+// GLOBAL ERROR HANDLER
 app.use(errorHandler);
 
 app.listen(5000, () => {

@@ -107,7 +107,7 @@
   margin-top: 15px;
   padding-top: 15px;
   border-top: 1px dashed #cbd5e1;
-  color: #10b981; /* צבע ירוק רענן ויפה למחיר */
+  color: #10b981;
   font-weight: 600;
 }
 
@@ -120,14 +120,14 @@
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  opacity: 0.5; /* שקוף חלקית כדי לא להשתלט על העיצוב */
+  opacity: 0.5;
   transition: opacity 0.2s, transform 0.2s;
 }
 
 .btn-delete-trip:hover {
   opacity: 1;
-  transform: scale(1.1); /* גדל קצת כשעוברים עליו */
-  filter: grayscale(0%) sepia(100%) hue-rotate(-50deg) saturate(500%); /* נותן גוון אדמדם במעבר עכבר */
+  transform: scale(1.1); 
+  filter: grayscale(0%) sepia(100%) hue-rotate(-50deg) saturate(500%);
 }
 
 .header-actions {
@@ -136,7 +136,7 @@
   align-items: center;
 }
 
-/* כפתור התנתקות */
+/* Logout button */
 .btn-logout {
   position: absolute;
   top: 20px;
@@ -156,4 +156,45 @@
   background-color: #fee2e2;
   color: #b91c1c;
   border-color: #fca5a5;
+}
+
+/* The container holding both buttons */
+.trip-card-buttons {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 10px;          /* space between the two buttons */
+  align-items: center;
+}
+
+/* Both buttons - same clean style */
+.btn-edit-trip,
+.btn-delete-trip {
+  position: static;   /* override any old absolute positioning */
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.btn-edit-trip:hover,
+.btn-delete-trip:hover {
+  opacity: 1;
+}
+
+.trip-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.trip-edit-actions button {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 0.8rem;
+  margin-top: 0;
 }
