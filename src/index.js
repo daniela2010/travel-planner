@@ -5,7 +5,6 @@ import store from './store/store';            // our Redux store
 import { AuthProvider } from './context/AuthContext'; // our Context provider
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -19,5 +18,3 @@ root.render(
     </Provider>
   </React.StrictMode>
 );
-
-reportWebVitals();

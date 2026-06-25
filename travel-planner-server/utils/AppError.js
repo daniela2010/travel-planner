@@ -7,10 +7,6 @@ class AppError extends Error {
     constructor(message, statusCode) {
         super(message);            // set the message on the base Error
         this.statusCode = statusCode;
-        // Marks this as an error we created on purpose (an expected,
-        // "operational" error) rather than an unexpected programming bug.
-        this.isOperational = true;
-
         Error.captureStackTrace(this, this.constructor);
     }
 }

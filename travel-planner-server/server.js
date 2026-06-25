@@ -1,14 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 require('dotenv').config();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 
 const app = express();
 
-app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json());
 app.use(cors());
 
 mongoose.connect(process.env.DATABASE_URL);
