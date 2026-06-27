@@ -8,12 +8,42 @@ function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('');         // server-level status message
+  const [fieldErrors, setFieldErrors] = useState({}); // field-level client validation errors
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Client-side validation — mirrors the server-side Joi rules in schemas.js.
+  // Running it here gives instant feedback without waiting for an API round-trip.
+  const validateForm = () => {
+    const errors = {};
+
+    if (!name.trim() || name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+    }
+
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+    setMessage('');
+
+    if (!validateForm()) return;
+
     try {
       const response = await api.post('/register', { name, email, password });
       login(response.data.token, response.data.user);
@@ -25,6 +55,13 @@ function RegisterPage() {
       } else {
         setMessage('Registration failed. Please try again.');
       }
+    }
+  };
+
+  // Clear a specific field's error as soon as the user edits that field
+  const clearFieldError = (field) => {
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -45,32 +82,46 @@ function RegisterPage() {
                 type="text"
                 placeholder="Your name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
+                onChange={(e) => { setName(e.target.value); clearFieldError('name'); }}
               />
+              {fieldErrors.name && (
+                <span style={{ color: '#e53e3e', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
+                  {fieldErrors.name}
+                </span>
+              )}
             </div>
+
             <div className="input-group">
               <label>Email</label>
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => { setEmail(e.target.value); clearFieldError('email'); }}
               />
+              {fieldErrors.email && (
+                <span style={{ color: '#e53e3e', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
+                  {fieldErrors.email}
+                </span>
+              )}
             </div>
+
             <div className="input-group">
               <label>Password</label>
               <input
                 type="password"
                 placeholder="Min 6 characters"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={6}
-                required
+                onChange={(e) => { setPassword(e.target.value); clearFieldError('password'); }}
               />
+              {fieldErrors.password && (
+                <span style={{ color: '#e53e3e', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
+                  {fieldErrors.password}
+                </span>
+              )}
             </div>
 
+            {/* Server-level message (success or API error) */}
             {message && (
               <p className={`status-message ${message.includes('successful') ? 'success' : 'error'}`}>
                 {message}

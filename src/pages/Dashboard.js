@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchTrips, deleteTrip, updateTrip } from '../store/tripsSlice';
+import { fetchTrips, deleteTrip, updateTrip, clearError } from '../store/tripsSlice';
 import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
@@ -9,7 +9,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { items: trips, loading } = useSelector((state) => state.trips);
+  // Destructure error so we can display it when any trip operation fails
+  const { items: trips, loading, error } = useSelector((state) => state.trips);
   const { user, logout } = useAuth();
 
   const [editingId, setEditingId] = useState(null);
@@ -17,6 +18,8 @@ const Dashboard = () => {
   const [editError, setEditError] = useState('');
 
   useEffect(() => {
+    // Clear any error left over from a previous page visit before fetching
+    dispatch(clearError());
     dispatch(fetchTrips());
   }, [dispatch]);
 
@@ -80,6 +83,16 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard-content-wrapper">
+        {/* Global Redux error banner — shown when any trip operation (add/update/delete) fails */}
+        {error && (
+          <p style={{
+            background: '#fff5f5', color: '#e53e3e', border: '1px solid #feb2b2',
+            borderRadius: '8px', padding: '12px 16px', marginBottom: '16px'
+          }}>
+            {error}
+          </p>
+        )}
+
         {loading ? (
           <p className="loading-text">Loading your trips...</p>
         ) : trips.length === 0 ? (

@@ -1,27 +1,28 @@
 const mongoose = require('mongoose');
 
-// הגדרת הסכמה - התבנית של הטיול שלנו
+// Trip schema — defines the shape of a travel trip document in MongoDB.
 const tripSchema = new mongoose.Schema({
     destination: {
         type: String,
-        required: true // חובה להזין יעד
+        required: true
     },
     startDate: {
         type: Date,
-        required: true // חובה להזין תאריך התחלה
+        required: true
     },
     endDate: {
         type: Date,
-        required: true // חובה להזין תאריך סיום
+        required: true
     },
     budget: {
         type: Number,
-        required: false // תקציב - לא חובה
+        required: false // optional field
     },
-    // השדה הכי חשוב! מי המשתמש שיצר את הטיול הזה?
+    // Foreign key — stores the MongoDB ObjectId of the user who created this trip.
+    // This is the link between the Users and Trips collections.
     userId: {
-        type: mongoose.Schema.Types.ObjectId, // זה אומר שאנחנו שומרים פה תעודת זהות של מונגו
-        ref: 'User', // מראה שזה קשור למודל המשתמשים שלנו
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // tells Mongoose this ObjectId points to the User model
         required: true
     },
     createdAt: {
@@ -30,5 +31,4 @@ const tripSchema = new mongoose.Schema({
     }
 });
 
-// ייצוא המודל כדי שנוכל להשתמש בו בשרת
 module.exports = mongoose.model('Trip', tripSchema);

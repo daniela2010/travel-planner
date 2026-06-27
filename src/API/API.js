@@ -1,16 +1,14 @@
 import axios from 'axios';
 
-// A single axios instance for the whole app.
-// Benefit: the server URL is defined in ONE place. If it changes
-// (e.g. after deployment), you only edit it here instead of in every file.
+// Central axios instance used by every component in the app.
+// baseURL is read from an environment variable so it works both locally and in production
+// without changing any source code — just set REACT_APP_API_URL in the deployment environment.
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api'
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
 });
 
-// Request interceptor
-// This runs automatically before EVERY request made with `api`.
-// It reads the saved token and adds it to the Authorization header,
-// so we don't have to attach it manually in each component.
+// Request interceptor — runs automatically before EVERY request made with this instance.
+// Attaches the stored JWT token to the Authorization header so routes don't need to do it manually.
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
