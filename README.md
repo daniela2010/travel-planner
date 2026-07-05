@@ -1,70 +1,104 @@
-# Getting Started with Create React App
+# Travel Planner
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack web application for planning and organizing trips. Users can create trips, build day-by-day itineraries, and attach photos to activities.
 
-## Available Scripts
+## Live Demo
 
-In the project directory, you can run:
+- **Frontend:** https://travel-planner-nu-khaki.vercel.app
+- **Backend API:** https://travel-planner-server-fvd5.onrender.com
 
-### `npm start`
+> Note: the backend runs on Render's free tier and may take ~30 seconds to wake up after a period of inactivity.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Features
 
-### `npm test`
+- User registration and login with JWT authentication
+- Password encryption with bcrypt
+- Create, edit, and delete trips
+- Day-by-day itinerary planner for each trip
+- Add, edit, and delete activities per day
+- Attach and view photos for each activity (uploaded to MongoDB)
+- Protected routes — only logged-in users can access their own data
+- Fully responsive UI
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Tech Stack
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Frontend
+| Technology | Purpose |
+|-----------|---------|
+| React 19 | UI framework |
+| React Router v7 | Client-side routing |
+| Redux Toolkit | Global state management for trips |
+| Context API | Authentication state |
+| Axios | HTTP requests with JWT interceptor |
+| React.lazy + Suspense | Code splitting / lazy loading |
+| React.memo + useMemo + useCallback | Performance optimization |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Backend
+| Technology | Purpose |
+|-----------|---------|
+| Node.js + Express | REST API server |
+| MongoDB + Mongoose | Database and schema modeling |
+| JWT (jsonwebtoken) | Authentication tokens |
+| bcryptjs | Password hashing |
+| Multer | File upload (stored in MongoDB) |
+| Joi | Request validation |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Project Structure
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```
+travel-planner/
+├── src/                        # React frontend
+│   ├── api/                    # Axios instance
+│   ├── components/             # Reusable components
+│   ├── context/                # Auth Context
+│   ├── pages/                  # Page components
+│   ├── store/                  # Redux store and slices
+│   └── styles/                 # Global CSS variables
+└── travel-planner-server/      # Express backend
+    ├── controllers/            # Route logic
+    ├── middleware/             # Auth, validation, upload, error handling
+    ├── models/                 # Mongoose schemas (User, Trip, Activity)
+    ├── routes/                 # Express routers
+    ├── utils/                  # AppError class
+    └── validators/             # Joi schemas
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Running Locally
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Prerequisites
+- Node.js installed
+- MongoDB installed and running locally (or a MongoDB Atlas connection string)
 
-## Learn More
+### Backend
+```bash
+cd travel-planner-server
+npm install
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Create a `.env` file inside `travel-planner-server/`:
+```
+DATABASE_URL=mongodb://127.0.0.1:27017/travel_planner
+JWT_SECRET=your_secret_key
+FRONTEND_URL=http://localhost:3000
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+node server.js
+```
 
-### Code Splitting
+### Frontend
+```bash
+# from the project root
+npm install
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Open http://localhost:3000 in your browser.
