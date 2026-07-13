@@ -47,7 +47,9 @@ exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        // password has select:false on the schema, so we must explicitly
+        // opt back in here — the only query in the app that needs the hash.
+        const user = await User.findOne({ email }).select('+password');
         if (!user) return next(new AppError('User not found', 400));
 
         const isMatch = await user.comparePassword(password);
@@ -60,6 +62,21 @@ exports.login = async (req, res, next) => {
             token,
             user: { id: user._id, name: user.name, email: user.email }
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// GET /api/me (protected)
+// Returns the currently logged-in user, identified by the JWT.
+// The frontend calls this on page load to restore the session and
+// verify that the stored token is still valid.
+exports.getMe = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id); // password excluded by select:false
+        if (!user) return next(new AppError('User not found', 404));
+
+        res.json({ user: { id: user._id, name: user.name, email: user.email } });
     } catch (error) {
         next(error);
     }

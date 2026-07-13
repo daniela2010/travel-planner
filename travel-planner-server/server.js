@@ -1,9 +1,19 @@
+require('dotenv').config(); // must load env vars before anything else
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config();
 const cors = require('cors');
+const helmet = require('helmet');
+const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
+
+// Render/Heroku run the app behind a reverse proxy.
+// trust proxy lets express-rate-limit see the real client IP instead of the proxy's.
+app.set('trust proxy', 1);
+
+// Helmet sets secure HTTP headers (XSS protection, clickjacking defense,
+// MIME-sniffing prevention, HSTS). One line, big security win.
+app.use(helmet());
 
 // Allow requests only from the configured frontend origin.
 // FRONTEND_URL is set as an environment variable in production.
@@ -12,6 +22,12 @@ app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Rate limiting: general limit on every /api route,
+// stricter limit on auth routes to block brute-force password guessing.
+app.use('/api', apiLimiter);
+app.use('/api/register', authLimiter);
+app.use('/api/login', authLimiter);
 
 // Connect to MongoDB
 mongoose.connect(process.env.DATABASE_URL);
@@ -30,4 +46,6 @@ app.use('/api/trips', require('./routes/activities'));
 // Global error handler — must be registered AFTER all routes
 app.use(require('./middleware/errorHandler'));
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+// PORT comes from the hosting platform in production (no hardcoded values)
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

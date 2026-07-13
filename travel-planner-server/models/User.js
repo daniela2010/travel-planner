@@ -16,7 +16,9 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: 6 // basic rule: a password must be at least 6 characters
+        minlength: 6, // basic rule: a password must be at least 6 characters
+        select: false // excluded from all queries by default so the hash can never
+                      // leak in an API response. Login opts back in with .select('+password').
     },
     createdAt: {
         type: Date,
