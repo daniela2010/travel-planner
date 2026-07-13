@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Travel Planner API",
+    "description": "Full API collection for the Travel Planner project. Set BASE_URL and TOKEN in a Postman environment. After login, copy the token from the response into the TOKEN variable.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:5000" },
+    { "key": "TOKEN", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{BASE_URL}}/api/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{BASE_URL}}/api/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "item": [
+        {
+          "name": "Get All Trips",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips"
+          }
+        },
+        {
+          "name": "Get Trip By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId"
+          }
+        },
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/trips",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"Tokyo, Japan\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-07\",\n  \"budget\": 3000\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Trip",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/trips/:tripId",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"Kyoto, Japan\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-10\",\n  \"budget\": 3500\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Trip",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Activities",
+      "item": [
+        {
+          "name": "Get Activities For Trip",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities"
+          }
+        },
+        {
+          "name": "Create Activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"day\": 1,\n  \"time\": \"09:00\",\n  \"title\": \"Visit Senso-ji Temple\",\n  \"type\": \"Attraction\",\n  \"notes\": \"Arrive early to avoid crowds\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Activity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities/:activityId",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"day\": 1,\n  \"time\": \"10:00\",\n  \"title\": \"Visit Senso-ji Temple\",\n  \"type\": \"Attraction\",\n  \"notes\": \"Updated time\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Activity",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities/:activityId"
+          }
+        },
+        {
+          "name": "Upload Activity Image",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities/:activityId/image",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "image", "type": "file", "src": [] }]
+            }
+          }
+        },
+        {
+          "name": "Get Activity Image",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities/:activityId/image"
+          }
+        },
+        {
+          "name": "Delete Activity Image",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }],
+            "url": "{{BASE_URL}}/api/trips/:tripId/activities/:activityId/image"
+          }
+        }
+      ]
+    }
+  ]
+}
