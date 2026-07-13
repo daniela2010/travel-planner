@@ -120,6 +120,25 @@ exports.uploadImage = async (req, res, next) => {
     }
 };
 
+// DELETE /api/trips/:tripId/activities/:activityId/image
+// Removes the photo from an activity by clearing the three image fields.
+exports.deleteImage = async (req, res, next) => {
+    try {
+        await getOwnedTrip(req.params.tripId, req.user.id);
+
+        const updated = await Activity.findOneAndUpdate(
+            { _id: req.params.activityId, tripId: req.params.tripId },
+            { $unset: { imageData: '', imageType: '' }, $set: { hasImage: false } },
+            { returnDocument: 'after' }
+        );
+
+        if (!updated) return next(new AppError('Activity not found', 404));
+        res.json({ message: 'Image deleted successfully', hasImage: false });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // GET /api/trips/:tripId/activities/:activityId/image
 // Serves the raw image bytes with the correct Content-Type header.
 // An <img src="...this URL..."> in the frontend will render the photo directly.

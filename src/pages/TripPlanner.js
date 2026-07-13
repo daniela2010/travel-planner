@@ -160,6 +160,16 @@ const TripPlanner = () => {
     }
   }, [tripId]);
 
+  const handleDeleteImage = useCallback(async (activityId) => {
+    try {
+      await api.delete(`/trips/${tripId}/activities/${activityId}/image`);
+      setActivities((prev) => prev.map((a) => a._id === activityId ? { ...a, hasImage: false } : a));
+      setImageUrls((prev) => { const copy = { ...prev }; delete copy[activityId]; return copy; });
+    } catch (err) {
+      setError('Could not remove photo.');
+    }
+  }, [tripId]);
+
   const handleEnlarge = useCallback((url) => {
     setLightboxUrl(url);
   }, []);
@@ -284,6 +294,7 @@ const TripPlanner = () => {
                     onEdit={startEdit}
                     onDelete={handleDeleteActivity}
                     onUpload={handleImageUpload}
+                    onDeleteImage={handleDeleteImage}
                     onEnlarge={handleEnlarge}
                   />
                 )

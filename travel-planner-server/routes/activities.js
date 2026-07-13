@@ -7,6 +7,7 @@ const {
     updateActivity,
     deleteActivity,
     uploadImage,
+    deleteImage,
     getImage
 } = require('../controllers/activitiesController');
 
@@ -36,6 +37,9 @@ router.delete('/:tripId/activities/:activityId',
 
 router.post('/:tripId/activities/:activityId/image',
     authMiddleware, upload.single('image'), uploadImage);
+
+router.delete('/:tripId/activities/:activityId/image',
+    authMiddleware, deleteImage);
 
 router.get('/:tripId/activities/:activityId/image',
     authMiddleware, getImage);

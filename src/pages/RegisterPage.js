@@ -8,6 +8,7 @@ function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');         // server-level status message
   const [fieldErrors, setFieldErrors] = useState({}); // field-level client validation errors
   const navigate = useNavigate();
@@ -32,6 +33,12 @@ function RegisterPage() {
       errors.password = 'Password is required';
     } else if (password.length < 6) {
       errors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (confirmPassword !== password) {
+      errors.confirmPassword = 'Passwords do not match';
     }
 
     setFieldErrors(errors);
@@ -117,6 +124,21 @@ function RegisterPage() {
               {fieldErrors.password && (
                 <span style={{ color: '#e53e3e', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
                   {fieldErrors.password}
+                </span>
+              )}
+            </div>
+
+            <div className="input-group">
+              <label>Confirm Password</label>
+              <input
+                type="password"
+                placeholder="Repeat your password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword'); }}
+              />
+              {fieldErrors.confirmPassword && (
+                <span style={{ color: '#e53e3e', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
+                  {fieldErrors.confirmPassword}
                 </span>
               )}
             </div>

@@ -8,7 +8,7 @@ import React from 'react';
 
 // This card is "view mode" only. The edit form stays in the parent, which
 // keeps this component simple and easy for memo to compare.
-const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onEnlarge }) => {
+const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onDeleteImage, onEnlarge }) => {
   return (
     <div className="activity-card" data-type={activity.type}>
       <div className="activity-time">{activity.time}</div>
@@ -38,6 +38,16 @@ const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onEnlarg
             onChange={(e) => onUpload(activity._id, e.target.files[0])}
           />
         </label>
+
+        {/* Delete photo button — only shown when a photo exists */}
+        {activity.hasImage && (
+          <button
+            style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', marginTop: '4px', padding: 0, fontSize: '0.85rem' }}
+            onClick={() => onDeleteImage(activity._id)}
+          >
+            🗑️ Remove photo
+          </button>
+        )}
       </div>
 
       <div className="activity-actions">
