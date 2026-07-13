@@ -12,6 +12,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AddTripPage = lazy(() => import('./pages/AddTripPage'));
 const TripPlanner = lazy(() => import('./pages/TripPlanner'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
   return (
@@ -52,6 +53,9 @@ function App() {
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/login" />} />
+
+            {/* Catch-all 404 — must be LAST. Renders for any unmatched URL. */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </div>

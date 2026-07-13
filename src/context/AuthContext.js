@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import api from '../api/api';
 
 // Auth Context
 // Context lets us share the logged-in user's info across the whole app
@@ -19,7 +20,15 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         const userName = localStorage.getItem('userName');
         if (token && userName) {
+            // Restore instantly from localStorage for a snappy UI...
             setUser({ name: userName });
+
+            // ...then verify the token against the server (GET /me).
+            // If the token expired, the 401 interceptor in api.js clears it
+            // and redirects to /login automatically.
+            api.get('/me')
+                .then((res) => setUser({ name: res.data.user.name }))
+                .catch(() => { /* handled globally by the 401 interceptor */ });
         }
     }, []);
 

@@ -17,4 +17,20 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Response interceptor — handles 401 Unauthorized globally.
+// When the JWT expires or is invalid, every request starts returning 401.
+// Instead of each component handling that separately, we catch it once here:
+// clear the dead token and send the user back to the login page.
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userName');
+            window.location.href = '/login'; // hard redirect also resets React state
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/api';
+import { useFetch } from '../hooks/useFetch';
 import ActivityCard from '../components/ActivityCard';
 import './TripPlanner.css';
 
@@ -8,11 +9,15 @@ const TripPlanner = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
+  // Custom hook: fetches the trip and gives us data + loading + error in one line.
+  // (The trip object is read-only on this page, which is exactly what useFetch is for.
+  //  Activities are kept in local state below because we add/edit/delete them.)
+  const { data: trip, loading: tripLoading, error: tripError } = useFetch(`/trips/${tripId}`);
+
   // State
-  const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [showForm, setShowForm] = useState(false);
@@ -24,27 +29,25 @@ const TripPlanner = () => {
   const [imageUrls, setImageUrls] = useState({});
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
-  // Load the trip and its activities
+  // Combined loading state: the page is ready when both requests finish.
+  const loading = tripLoading || activitiesLoading;
+
+  // Load the activities list (mutable state — the user adds/edits/deletes items).
+  // A 401 (expired token) is handled globally by the interceptor in api.js.
   useEffect(() => {
-    const loadData = async () => {
+    const loadActivities = async () => {
       try {
-        const tripRes = await api.get(`/trips/${tripId}`);
-        const activitiesRes = await api.get(`/trips/${tripId}/activities`);
-        setTrip(tripRes.data);
-        setActivities(activitiesRes.data);
+        const res = await api.get(`/trips/${tripId}/activities`);
+        setActivities(res.data);
       } catch (err) {
-        if (err.response && err.response.status === 401) {
-          navigate('/login');
-          return;
-        }
         setError('Could not load this trip.');
       } finally {
-        setLoading(false);
+        setActivitiesLoading(false);
       }
     };
 
-    loadData();
-  }, [tripId, navigate]);
+    loadActivities();
+  }, [tripId]);
 
   // Load activity images as blob URLs (protected route needs the token)
   useEffect(() => {
@@ -202,8 +205,9 @@ const TripPlanner = () => {
     return <div className="planner-container"><p>Loading your itinerary...</p></div>;
   }
 
-  if (error && !trip) {
-    return <div className="planner-container"><p>{error}</p></div>;
+  // If the trip itself failed to load (bad id, no access), show the error state.
+  if (tripError || !trip) {
+    return <div className="planner-container"><p>{tripError || error || 'Could not load this trip.'}</p></div>;
   }
 
   return (
