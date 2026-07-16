@@ -11,6 +11,7 @@ function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');         // server-level status message
   const [fieldErrors, setFieldErrors] = useState({}); // field-level client validation errors
+  const [submitting, setSubmitting] = useState(false); // true while the request is in flight
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -51,6 +52,7 @@ function RegisterPage() {
 
     if (!validateForm()) return;
 
+    setSubmitting(true); // disable the button so the form can't be double-submitted
     try {
       const response = await api.post('/register', { name, email, password });
       login(response.data.token, response.data.user);
@@ -62,6 +64,7 @@ function RegisterPage() {
       } else {
         setMessage('Registration failed. Please try again.');
       }
+      setSubmitting(false); // re-enable only on failure (success navigates away)
     }
   };
 
@@ -150,7 +153,9 @@ function RegisterPage() {
               </p>
             )}
 
-            <button type="submit" className="btn-auth">Create Account</button>
+            <button type="submit" className="btn-auth" disabled={submitting}>
+              {submitting ? 'Creating Account...' : 'Create Account'}
+            </button>
           </form>
 
           <p className="auth-switch">

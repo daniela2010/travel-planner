@@ -2,8 +2,12 @@ const Activity = require('../models/Activity');
 const Trip     = require('../models/Trip');
 const AppError = require('../utils/AppError');
 
-// Shared helper: confirm that the tripId exists and belongs to the requesting user.
-// All activity routes pass through this to enforce ownership before touching any activity.
+/**
+ * Loads a trip and verifies that it belongs to the authenticated user.
+ * @param {string} tripId MongoDB trip id.
+ * @param {string} userId Authenticated user id.
+ * @returns {Promise<object>} Owned Mongoose trip document.
+ */
 async function getOwnedTrip(tripId, userId) {
     const trip = await Trip.findById(tripId);
     if (!trip) throw new AppError('Trip not found', 404);
@@ -11,10 +15,13 @@ async function getOwnedTrip(tripId, userId) {
     return trip;
 }
 
-// GET /api/trips/:tripId/activities
-// Returns all activities for a trip, sorted by day then time.
-// Image data (imageData, imageType) is excluded from this query for performance —
-// those fields have select:false in the schema and are fetched via the /image route.
+/**
+ * Lists an owned trip's activities sorted by day and time.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.getActivities = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -27,8 +34,13 @@ exports.getActivities = async (req, res, next) => {
     }
 };
 
-// POST /api/trips/:tripId/activities
-// Creates a new activity item inside the given trip.
+/**
+ * Creates an activity in an owned trip.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.createActivity = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -49,8 +61,13 @@ exports.createActivity = async (req, res, next) => {
     }
 };
 
-// PUT /api/trips/:tripId/activities/:activityId
-// Replaces all editable fields of an existing activity.
+/**
+ * Updates an activity in an owned trip.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.updateActivity = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -74,8 +91,13 @@ exports.updateActivity = async (req, res, next) => {
     }
 };
 
-// DELETE /api/trips/:tripId/activities/:activityId
-// Removes a single activity from the trip.
+/**
+ * Deletes an activity from an owned trip.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.deleteActivity = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -94,11 +116,13 @@ exports.deleteActivity = async (req, res, next) => {
     }
 };
 
-// POST /api/trips/:tripId/activities/:activityId/image
-// Accepts an image file (multipart/form-data, field name "image") via Multer.
-// Stores the raw bytes and mime type directly in MongoDB.
-// After upload, sets hasImage:true so the frontend knows a photo exists
-// without loading the binary data on every list request.
+/**
+ * Stores an uploaded activity image directly in MongoDB.
+ * @param {import('express').Request} req Express request with req.file.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.uploadImage = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -120,8 +144,13 @@ exports.uploadImage = async (req, res, next) => {
     }
 };
 
-// DELETE /api/trips/:tripId/activities/:activityId/image
-// Removes the photo from an activity by clearing the three image fields.
+/**
+ * Removes an activity image from MongoDB.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.deleteImage = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);
@@ -139,10 +168,13 @@ exports.deleteImage = async (req, res, next) => {
     }
 };
 
-// GET /api/trips/:tripId/activities/:activityId/image
-// Serves the raw image bytes with the correct Content-Type header.
-// An <img src="...this URL..."> in the frontend will render the photo directly.
-// We must explicitly select the hidden fields (imageData, imageType) here.
+/**
+ * Returns an activity image with its stored content type.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.getImage = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.tripId, req.user.id);

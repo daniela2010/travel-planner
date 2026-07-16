@@ -282,3 +282,41 @@
 .btn-cancel:hover {
   background-color: #e2e8f0;
 }
+
+.trip-card button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Responsive layout — tablets and phones
+   ============================================================ */
+@media (max-width: 768px) {
+  .dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 16px;
+  }
+
+  .dashboard-hero h1 {
+    font-size: 1.4rem;
+  }
+
+  .hero-actions {
+    width: 100%;
+  }
+
+  .hero-actions button {
+    flex: 1;
+  }
+
+  .dashboard-content-wrapper {
+    padding: 16px 12px;
+  }
+
+  /* Trip cards become a single column on phones */
+  .trips-grid {
+    grid-template-columns: 1fr;
+  }
+}

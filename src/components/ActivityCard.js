@@ -8,7 +8,20 @@ import React from 'react';
 
 // This card is "view mode" only. The edit form stays in the parent, which
 // keeps this component simple and easy for memo to compare.
-const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onDeleteImage, onEnlarge }) => {
+const ActivityCard = ({
+  activity,
+  imageUrl,
+  onEdit,
+  onDelete,
+  onUpload,
+  onDeleteImage,
+  onEnlarge,
+  isDeleting,
+  isUploading,
+  isDeletingImage
+}) => {
+  const isBusy = isDeleting || isUploading || isDeletingImage;
+
   return (
     <div className="activity-card" data-type={activity.type}>
       <div className="activity-time">{activity.time}</div>
@@ -29,11 +42,12 @@ const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onDelete
         )}
 
         {/* Upload / change photo */}
-        <label className="upload-label">
-          {activity.hasImage ? '🖼️ Change photo' : '📎 Attach photo'}
+        <label className={`upload-label ${isUploading ? 'disabled' : ''}`}>
+          {isUploading ? 'Uploading...' : activity.hasImage ? '🖼️ Change photo' : '📎 Attach photo'}
           <input
             type="file"
             accept="image/*"
+            disabled={isBusy}
             style={{ display: 'none' }}
             onChange={(e) => onUpload(activity._id, e.target.files[0])}
           />
@@ -43,16 +57,20 @@ const ActivityCard = ({ activity, imageUrl, onEdit, onDelete, onUpload, onDelete
         {activity.hasImage && (
           <button
             style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', marginTop: '4px', padding: 0, fontSize: '0.85rem' }}
+            type="button"
+            disabled={isBusy}
             onClick={() => onDeleteImage(activity._id)}
           >
-            🗑️ Remove photo
+            {isDeletingImage ? 'Removing...' : '🗑️ Remove photo'}
           </button>
         )}
       </div>
 
       <div className="activity-actions">
-        <button className="btn-icon" title="Edit" onClick={() => onEdit(activity)}>✏️</button>
-        <button className="btn-icon" title="Delete" onClick={() => onDelete(activity._id)}>🗑️</button>
+        <button type="button" className="btn-icon" title="Edit" disabled={isBusy} onClick={() => onEdit(activity)}>✏️</button>
+        <button type="button" className="btn-icon" title="Delete" disabled={isBusy} onClick={() => onDelete(activity._id)}>
+          {isDeleting ? '...' : '🗑️'}
+        </button>
       </div>
     </div>
   );

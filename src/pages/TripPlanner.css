@@ -305,3 +305,91 @@
   border-radius: 8px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
+
+.planner-state {
+  display: flex;
+  min-height: 50vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.planner-container button:disabled,
+.upload-label.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Responsive layout — tablets and phones
+   ============================================================ */
+@media (max-width: 768px) {
+  .planner-container {
+    padding: 12px;
+  }
+
+  /* Header stacks vertically instead of side-by-side */
+  .planner-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+  .header-info h1 { font-size: 1.4rem; }
+
+  /* The sidebar + main grid collapses to a single column.
+     The days list becomes a horizontal scrollable strip. */
+  .planner-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .days-sidebar {
+    padding: 12px;
+  }
+
+  .days-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .day-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 10px 14px;
+  }
+
+  .activities-main {
+    padding: 14px;
+  }
+
+  /* Activity cards stack their content vertically on small screens */
+  .activity-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .activity-time {
+    width: auto;
+  }
+
+  .activity-actions {
+    align-self: flex-end;
+  }
+
+  .activity-image {
+    max-width: 100%;
+  }
+
+  /* Form inputs take the full width, stacked */
+  .activity-form input,
+  .activity-form select,
+  .activity-form button {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}

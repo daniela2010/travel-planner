@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import { useFetch } from '../hooks/useFetch';
@@ -17,6 +17,7 @@ const TripPlanner = () => {
   // State
   const [activities, setActivities] = useState([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
+  const [activitiesLoadError, setActivitiesLoadError] = useState('');
   const [selectedDay, setSelectedDay] = useState(1);
   const [error, setError] = useState('');
 
@@ -28,39 +29,72 @@ const TripPlanner = () => {
 
   const [imageUrls, setImageUrls] = useState({});
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [addingActivity, setAddingActivity] = useState(false);
+  const [updatingActivity, setUpdatingActivity] = useState(false);
+  const [deletingActivityId, setDeletingActivityId] = useState(null);
+  const [uploadingActivityId, setUploadingActivityId] = useState(null);
+  const [deletingImageId, setDeletingImageId] = useState(null);
+  const imageUrlsRef = useRef({});
 
   // Combined loading state: the page is ready when both requests finish.
   const loading = tripLoading || activitiesLoading;
 
   // Load the activities list (mutable state — the user adds/edits/deletes items).
   // A 401 (expired token) is handled globally by the interceptor in api.js.
-  useEffect(() => {
-    const loadActivities = async () => {
-      try {
-        const res = await api.get(`/trips/${tripId}/activities`);
-        setActivities(res.data);
-      } catch (err) {
-        setError('Could not load this trip.');
-      } finally {
-        setActivitiesLoading(false);
-      }
-    };
-
-    loadActivities();
+  const loadActivities = useCallback(async () => {
+    setActivitiesLoading(true);
+    setActivitiesLoadError('');
+    try {
+      const res = await api.get(`/trips/${tripId}/activities`);
+      setActivities(res.data);
+    } catch (err) {
+      setActivitiesLoadError(err.response?.data?.message || 'Could not load this trip.');
+    } finally {
+      setActivitiesLoading(false);
+    }
   }, [tripId]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
+
+  useEffect(() => {
+    imageUrlsRef.current = imageUrls;
+  }, [imageUrls]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(imageUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const discardImageUrl = useCallback((activityId) => {
+    setImageUrls((prev) => {
+      if (prev[activityId]) URL.revokeObjectURL(prev[activityId]);
+      const copy = { ...prev };
+      delete copy[activityId];
+      return copy;
+    });
+  }, []);
 
   // Load activity images as blob URLs (protected route needs the token)
   useEffect(() => {
     const loadImages = async () => {
       for (const activity of activities) {
-        if (activity.hasImage && !imageUrls[activity._id]) {
+        if (activity.hasImage && !imageUrlsRef.current[activity._id]) {
           try {
             const res = await api.get(
               `/trips/${tripId}/activities/${activity._id}/image`,
               { responseType: 'blob' }
             );
             const url = URL.createObjectURL(res.data);
-            setImageUrls((prev) => ({ ...prev, [activity._id]: url }));
+            setImageUrls((prev) => {
+              if (prev[activity._id]) {
+                URL.revokeObjectURL(url);
+                return prev;
+              }
+              return { ...prev, [activity._id]: url };
+            });
           } catch (err) {
             // skip a failed image, don't break the page
           }
@@ -71,7 +105,6 @@ const TripPlanner = () => {
     if (activities.length > 0) {
       loadImages();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activities, tripId]);
 
   // useMemo: number of days
@@ -99,9 +132,25 @@ const TripPlanner = () => {
     [activities, selectedDay]
   );
 
+  const validateActivity = (values) => {
+    if (!values.time) return 'Time is required.';
+    if (!values.title.trim() || values.title.trim().length < 2) {
+      return 'Activity title must be at least 2 characters.';
+    }
+    return '';
+  };
+
   // Add a new activity
   const handleAddActivity = async (e) => {
     e.preventDefault();
+    const validationError = validateActivity(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setAddingActivity(true);
+    setError('');
     try {
       const response = await api.post(`/trips/${tripId}/activities`, {
         day: selectedDay,
@@ -115,6 +164,8 @@ const TripPlanner = () => {
       setShowForm(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not add activity.');
+    } finally {
+      setAddingActivity(false);
     }
   };
 
@@ -132,16 +183,34 @@ const TripPlanner = () => {
   }, []);
 
   const handleDeleteActivity = useCallback(async (activityId) => {
+    if (!window.confirm('Delete this activity?')) return;
+
+    setDeletingActivityId(activityId);
+    setError('');
     try {
       await api.delete(`/trips/${tripId}/activities/${activityId}`);
       setActivities((prev) => prev.filter((a) => a._id !== activityId));
+      discardImageUrl(activityId);
     } catch (err) {
-      setError('Could not delete activity.');
+      setError(err.response?.data?.message || 'Could not delete activity.');
+    } finally {
+      setDeletingActivityId(null);
     }
-  }, [tripId]);
+  }, [discardImageUrl, tripId]);
 
   const handleImageUpload = useCallback(async (activityId, file) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Only image files are allowed.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image is too large (max 5 MB).');
+      return;
+    }
+
+    setUploadingActivityId(activityId);
+    setError('');
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -153,25 +222,27 @@ const TripPlanner = () => {
       );
 
       setActivities((prev) => prev.map((a) => (a._id === activityId ? { ...a, hasImage: true } : a)));
-      setImageUrls((prev) => {
-        const copy = { ...prev };
-        delete copy[activityId];
-        return copy;
-      });
+      discardImageUrl(activityId);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not upload image.');
+    } finally {
+      setUploadingActivityId(null);
     }
-  }, [tripId]);
+  }, [discardImageUrl, tripId]);
 
   const handleDeleteImage = useCallback(async (activityId) => {
+    setDeletingImageId(activityId);
+    setError('');
     try {
       await api.delete(`/trips/${tripId}/activities/${activityId}/image`);
       setActivities((prev) => prev.map((a) => a._id === activityId ? { ...a, hasImage: false } : a));
-      setImageUrls((prev) => { const copy = { ...prev }; delete copy[activityId]; return copy; });
+      discardImageUrl(activityId);
     } catch (err) {
-      setError('Could not remove photo.');
+      setError(err.response?.data?.message || 'Could not remove photo.');
+    } finally {
+      setDeletingImageId(null);
     }
-  }, [tripId]);
+  }, [discardImageUrl, tripId]);
 
   const handleEnlarge = useCallback((url) => {
     setLightboxUrl(url);
@@ -180,6 +251,14 @@ const TripPlanner = () => {
   // Save edits (PUT)
   const handleUpdateActivity = async (e) => {
     e.preventDefault();
+    const validationError = validateActivity(editForm);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setUpdatingActivity(true);
+    setError('');
     try {
       const response = await api.put(
         `/trips/${tripId}/activities/${editingId}`,
@@ -197,6 +276,8 @@ const TripPlanner = () => {
       setEditingId(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not update activity.');
+    } finally {
+      setUpdatingActivity(false);
     }
   };
 
@@ -208,6 +289,15 @@ const TripPlanner = () => {
   // If the trip itself failed to load (bad id, no access), show the error state.
   if (tripError || !trip) {
     return <div className="planner-container"><p>{tripError || error || 'Could not load this trip.'}</p></div>;
+  }
+
+  if (activitiesLoadError) {
+    return (
+      <div className="planner-container planner-state">
+        <p>{activitiesLoadError}</p>
+        <button className="btn-primary-outline" onClick={loadActivities}>Try Again</button>
+      </div>
+    );
   }
 
   return (
@@ -260,7 +350,9 @@ const TripPlanner = () => {
                 <option value="Other">Other</option>
               </select>
               <input type="text" placeholder="Notes (optional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-              <button type="submit" className="btn-add-activity">Save</button>
+              <button type="submit" className="btn-add-activity" disabled={addingActivity}>
+                {addingActivity ? 'Saving...' : 'Save'}
+              </button>
             </form>
           )}
 
@@ -285,8 +377,10 @@ const TripPlanner = () => {
                         <option value="Other">Other</option>
                       </select>
                       <input type="text" placeholder="Notes (optional)" value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
-                      <button type="submit" className="btn-add-activity">Save</button>
-                      <button type="button" className="btn-primary-outline" onClick={() => setEditingId(null)}>Cancel</button>
+                      <button type="submit" className="btn-add-activity" disabled={updatingActivity}>
+                        {updatingActivity ? 'Saving...' : 'Save'}
+                      </button>
+                      <button type="button" className="btn-primary-outline" disabled={updatingActivity} onClick={() => setEditingId(null)}>Cancel</button>
                     </form>
                   </div>
                 ) : (
@@ -300,6 +394,9 @@ const TripPlanner = () => {
                     onUpload={handleImageUpload}
                     onDeleteImage={handleDeleteImage}
                     onEnlarge={handleEnlarge}
+                    isDeleting={deletingActivityId === activity._id}
+                    isUploading={uploadingActivityId === activity._id}
+                    isDeletingImage={deletingImageId === activity._id}
                   />
                 )
               )

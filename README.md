@@ -23,6 +23,7 @@ A full-stack web application for planning and organizing trips. Users can create
 - Rate limiting and Helmet security headers on the API
 - Loading states, error states, 404 page, and error boundary
 - Fully responsive UI
+- Automated frontend and backend tests
 
 ---
 
@@ -95,6 +96,38 @@ All protected routes require an `Authorization: Bearer <token>` header.
 | GET | `/api/trips/:tripId/activities/:activityId/image` | Get the photo bytes | Yes |
 | DELETE | `/api/trips/:tripId/activities/:activityId/image` | Remove the photo | Yes |
 
+### Example Request & Response
+
+`POST /api/login`
+
+Request body:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "123456"
+}
+```
+
+Response `200 OK`:
+
+```json
+{
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": { "id": "665f1a...", "name": "Daniela", "email": "user@example.com" }
+}
+```
+
+Response `401 Unauthorized` for invalid credentials:
+
+```json
+{
+  "status": "error",
+  "message": "Invalid email or password"
+}
+```
+
 A ready-to-import **Postman collection** is included at [`travel-planner-server/postman_collection.json`](travel-planner-server/postman_collection.json).
 
 ---
@@ -113,11 +146,15 @@ travel-planner/
 │   └── styles/                 # Global CSS variables
 └── travel-planner-server/      # Express backend
     ├── controllers/            # Route logic (auth, trips, activities)
+    ├── config/                 # MongoDB connection setup
     ├── middleware/             # Auth, validation, upload, rate limiting, error handling
     ├── models/                 # Mongoose schemas (User, Trip, Activity)
     ├── routes/                 # Express routers
+    ├── test/                   # Backend middleware and API tests
     ├── utils/                  # AppError class
-    └── validators/             # Joi schemas
+    ├── validators/             # Joi schemas
+    ├── app.js                  # Express middleware and route configuration
+    └── server.js               # Database connection and HTTP listener
 ```
 
 ---
@@ -153,6 +190,23 @@ npm start
 ```
 
 Open http://localhost:3000 in your browser.
+
+---
+
+## Running Tests
+
+Frontend tests:
+
+```bash
+npm test -- --watchAll=false
+```
+
+Backend tests:
+
+```bash
+cd travel-planner-server
+npm test
+```
 
 ---
 

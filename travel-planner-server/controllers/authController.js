@@ -2,8 +2,11 @@ const jwt  = require('jsonwebtoken');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 
-// Signs a JWT containing the user's id and name.
-// The token expires after 7 days — long enough to stay logged in, short enough to limit exposure.
+/**
+ * Signs a JWT containing the user's id and name.
+ * @param {object} user Mongoose user document.
+ * @returns {string} Signed JWT that expires after seven days.
+ */
 function createToken(user) {
     return jwt.sign(
         { id: user._id, name: user.name },
@@ -12,9 +15,13 @@ function createToken(user) {
     );
 }
 
-// POST /api/register
-// Creates a new user account and immediately returns a JWT so the user
-// is logged in right after signing up (no separate login step required).
+/**
+ * Registers a user and returns a JWT for the new account.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.register = async (req, res, next) => {
     try {
         const user = new User({
@@ -41,8 +48,13 @@ exports.register = async (req, res, next) => {
     }
 };
 
-// POST /api/login
-// Verifies the user's credentials and returns a JWT on success.
+/**
+ * Verifies user credentials and returns a JWT.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -50,10 +62,10 @@ exports.login = async (req, res, next) => {
         // password has select:false on the schema, so we must explicitly
         // opt back in here — the only query in the app that needs the hash.
         const user = await User.findOne({ email }).select('+password');
-        if (!user) return next(new AppError('User not found', 400));
+        if (!user) return next(new AppError('Invalid email or password', 401));
 
         const isMatch = await user.comparePassword(password);
-        if (!isMatch) return next(new AppError('Wrong password, please try again', 400));
+        if (!isMatch) return next(new AppError('Invalid email or password', 401));
 
         const token = createToken(user);
 
@@ -67,10 +79,13 @@ exports.login = async (req, res, next) => {
     }
 };
 
-// GET /api/me (protected)
-// Returns the currently logged-in user, identified by the JWT.
-// The frontend calls this on page load to restore the session and
-// verify that the stored token is still valid.
+/**
+ * Returns the user represented by the verified JWT.
+ * @param {import('express').Request} req Express request with req.user.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.getMe = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id); // password excluded by select:false
