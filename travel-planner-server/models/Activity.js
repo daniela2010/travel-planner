@@ -62,4 +62,8 @@ const activitySchema = new mongoose.Schema({
     }
 });
 
+// Compound index: every itinerary page loads activities by tripId sorted by
+// day + time, so this index makes that exact query fast as the data grows.
+activitySchema.index({ tripId: 1, day: 1, time: 1 });
+
 module.exports = mongoose.model('Activity', activitySchema);

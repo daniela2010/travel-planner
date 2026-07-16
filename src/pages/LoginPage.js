@@ -9,6 +9,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');       // server-level status message
   const [fieldErrors, setFieldErrors] = useState({}); // field-level client validation errors
+  const [submitting, setSubmitting] = useState(false); // true while the login request is in flight
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -40,6 +41,7 @@ const LoginPage = () => {
     // Stop here if client-side validation fails — no API call needed
     if (!validateForm()) return;
 
+    setSubmitting(true); // disable the button so the form can't be double-submitted
     try {
       const response = await api.post('/login', { email, password });
       login(response.data.token, response.data.user);
@@ -51,6 +53,7 @@ const LoginPage = () => {
       } else {
         setMessage('An error occurred during login.');
       }
+      setSubmitting(false); // re-enable only on failure (success navigates away)
     }
   };
 
@@ -112,7 +115,9 @@ const LoginPage = () => {
               </p>
             )}
 
-            <button type="submit" className="btn-auth">Sign In</button>
+            <button type="submit" className="btn-auth" disabled={submitting}>
+              {submitting ? 'Signing In...' : 'Sign In'}
+            </button>
           </form>
 
           <p className="auth-switch">

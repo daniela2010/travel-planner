@@ -1,4 +1,5 @@
 const multer = require('multer');
+const AppError = require('../utils/AppError');
 
 // Multer upload middleware
 // Multer parses "multipart/form-data" requests (the format used when a form
@@ -8,11 +9,13 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 
 // Only allow image files. Multer calls this for every uploaded file.
+// Rejecting with an AppError (statusCode 400) means the global error handler
+// returns a proper 400 Bad Request instead of a generic 500.
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);  // accept the file
     } else {
-        cb(new Error('Only image files are allowed'), false); // reject it
+        cb(new AppError('Only image files are allowed', 400), false); // reject it
     }
 };
 

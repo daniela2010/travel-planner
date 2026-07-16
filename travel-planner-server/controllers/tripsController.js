@@ -2,9 +2,12 @@ const Trip     = require('../models/Trip');
 const Activity = require('../models/Activity');
 const AppError = require('../utils/AppError');
 
-// Shared helper: load a trip and verify that it belongs to the requesting user.
-// Throws an AppError (caught by the global error handler) instead of returning null,
-// so every route that calls this gets ownership enforcement for free.
+/**
+ * Loads a trip and verifies ownership.
+ * @param {string} tripId MongoDB trip id.
+ * @param {string} userId Authenticated user id.
+ * @returns {Promise<object>} Owned Mongoose trip document.
+ */
 async function getOwnedTrip(tripId, userId) {
     const trip = await Trip.findById(tripId);
     if (!trip) throw new AppError('Trip not found', 404);
@@ -12,30 +15,46 @@ async function getOwnedTrip(tripId, userId) {
     return trip;
 }
 
-// GET /api/trips
-// Returns all trips that belong to the logged-in user (identified by the JWT payload).
+/**
+ * Lists the authenticated user's trips, newest first.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.getTrips = async (req, res, next) => {
     try {
-        const trips = await Trip.find({ userId: req.user.id });
+        const trips = await Trip.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.json(trips);
     } catch (error) {
         next(error);
     }
 };
 
-// GET /api/trips/:id
-// Returns a single trip — only if it belongs to the logged-in user.
+/**
+ * Returns one owned trip and populates its user reference.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.getTripById = async (req, res, next) => {
     try {
-        const trip = await getOwnedTrip(req.params.id, req.user.id);
+        await getOwnedTrip(req.params.id, req.user.id); // ownership check first
+        const trip = await Trip.findById(req.params.id).populate('userId', 'name email');
         res.json(trip);
     } catch (error) {
         next(error);
     }
 };
 
-// POST /api/trips
-// Creates a new trip and links it to the logged-in user.
+/**
+ * Creates a trip owned by the authenticated user.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.createTrip = async (req, res, next) => {
     try {
         const newTrip = new Trip({
@@ -53,8 +72,13 @@ exports.createTrip = async (req, res, next) => {
     }
 };
 
-// PUT /api/trips/:id
-// Updates a trip's fields — only if it belongs to the logged-in user.
+/**
+ * Updates an owned trip.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.updateTrip = async (req, res, next) => {
     try {
         await getOwnedTrip(req.params.id, req.user.id); // ownership check
@@ -78,8 +102,13 @@ exports.updateTrip = async (req, res, next) => {
     }
 };
 
-// DELETE /api/trips/:id
-// Deletes a trip and all of its activities (cascade delete).
+/**
+ * Deletes an owned trip and its child activities.
+ * @param {import('express').Request} req Express request.
+ * @param {import('express').Response} res Express response.
+ * @param {import('express').NextFunction} next Express error callback.
+ * @returns {Promise<void>}
+ */
 exports.deleteTrip = async (req, res, next) => {
     try {
         const trip = await getOwnedTrip(req.params.id, req.user.id);

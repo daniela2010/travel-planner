@@ -11,6 +11,7 @@ const AddTripPage = () => {
   const [budget, setBudget]           = useState('');
   const [message, setMessage]         = useState('');       // server-level status message
   const [fieldErrors, setFieldErrors] = useState({});       // field-level client validation errors
+  const [submitting, setSubmitting]   = useState(false);    // true while the request is in flight
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -46,6 +47,7 @@ const AddTripPage = () => {
 
     if (!validateForm()) return;
 
+    setSubmitting(true); // disable the button so the form can't be double-submitted
     try {
       // Dispatch through Redux so the new trip lands in the store immediately.
       // The server reads the userId from the JWT token — we do not send it here.
@@ -56,6 +58,7 @@ const AddTripPage = () => {
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error) {
       setMessage(error.message || 'Failed to create trip. Please try again.');
+      setSubmitting(false); // re-enable only on failure (success navigates away)
     }
   };
 
@@ -149,7 +152,9 @@ const AddTripPage = () => {
               </p>
             )}
 
-            <button type="submit" className="btn-submit-trip">Create Trip</button>
+            <button type="submit" className="btn-submit-trip" disabled={submitting}>
+              {submitting ? 'Creating...' : 'Create Trip'}
+            </button>
           </form>
         </div>
       </div>

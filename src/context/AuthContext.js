@@ -15,21 +15,33 @@ export const AuthProvider = ({ children }) => {
     // We keep a small user object in state. On first load we try to restore
     // it from localStorage (so a refresh doesn't "log the user out" in the UI).
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         const userName = localStorage.getItem('userName');
-        if (token && userName) {
-            // Restore instantly from localStorage for a snappy UI...
-            setUser({ name: userName });
+        let active = true;
 
-            // ...then verify the token against the server (GET /me).
-            // If the token expired, the 401 interceptor in api.js clears it
-            // and redirects to /login automatically.
-            api.get('/me')
-                .then((res) => setUser({ name: res.data.user.name }))
-                .catch(() => { /* handled globally by the 401 interceptor */ });
+        if (!token) {
+            setLoading(false);
+            return () => { active = false; };
         }
+
+        if (userName) setUser({ name: userName });
+
+        // Verify the stored token before protected pages are rendered.
+        api.get('/me')
+            .then((res) => {
+                if (active) setUser({ name: res.data.user.name });
+            })
+            .catch(() => {
+                if (active) setUser(null); // the interceptor clears invalid token storage
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => { active = false; };
     }, []);
 
     // Called from the login/register pages after a successful request.
@@ -37,6 +49,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('userName', userData.name);
         setUser({ name: userData.name });
+        setLoading(false);
     };
 
     // Called from the logout button.
@@ -44,11 +57,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('userName');
         setUser(null);
+        setLoading(false);
     };
 
     // Everything passed in "value" becomes available to consumers.
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

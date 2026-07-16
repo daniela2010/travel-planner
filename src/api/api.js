@@ -24,7 +24,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
+        const requestPath = error.config?.url || '';
+        const isLoginRequest = requestPath.endsWith('/login') || requestPath.endsWith('/register');
+
+        // Invalid credentials are handled by the login/register form itself.
+        // Redirect only when an existing session fails on a protected request.
+        if (error.response?.status === 401 && !isLoginRequest) {
             localStorage.removeItem('token');
             localStorage.removeItem('userName');
             window.location.href = '/login'; // hard redirect also resets React state

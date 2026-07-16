@@ -1,14 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../api/api';
 
-// Custom hook: useFetch
-// Encapsulates the repeating pattern of "call the API + track loading + track error"
-// into one reusable function. Any component can fetch data with a single line:
-//
-//   const { data, loading, error, refetch } = useFetch('/trips/123');
-//
-// This keeps components clean and guarantees every fetch has proper
-// loading and error states (a UX grading requirement).
+/**
+ * Fetches API data and tracks loading and error state.
+ * @param {string} url API path relative to the configured Axios base URL.
+ * @returns {{data: any, loading: boolean, error: string|null, refetch: Function}}
+ */
 export const useFetch = (url) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
