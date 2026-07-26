@@ -24,4 +24,4 @@ yarn-debug.log*
 yarn-error.log*
 
 # local AI/editor settings
-.claude/settings.local.json
+.claude/
