@@ -10,29 +10,60 @@ import api from '../api/api';
 // Each thunk auto-generates three actions: pending / fulfilled / rejected.
 // We handle all three in extraReducers so the UI can react to every stage.
 
+const getApiErrorMessage = (error, fallbackMessage) =>
+    error.response?.data?.message || error.message || fallbackMessage;
+
 // Fetch all trips belonging to the logged-in user
-export const fetchTrips = createAsyncThunk('trips/fetchTrips', async () => {
-    const response = await api.get('/trips');
-    return response.data; // becomes action.payload in the "fulfilled" case
-});
+export const fetchTrips = createAsyncThunk(
+    'trips/fetchTrips',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get('/trips');
+            return response.data; // becomes action.payload in the "fulfilled" case
+        } catch (error) {
+            return rejectWithValue(getApiErrorMessage(error, 'Failed to load trips'));
+        }
+    }
+);
 
 // Create a new trip
-export const addTrip = createAsyncThunk('trips/addTrip', async (tripData) => {
-    const response = await api.post('/trips', tripData);
-    return response.data;
-});
+export const addTrip = createAsyncThunk(
+    'trips/addTrip',
+    async (tripData, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/trips', tripData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(getApiErrorMessage(error, 'Failed to create trip'));
+        }
+    }
+);
 
 // Update an existing trip
-export const updateTrip = createAsyncThunk('trips/updateTrip', async ({ id, tripData }) => {
-    const response = await api.put(`/trips/${id}`, tripData);
-    return response.data;
-});
+export const updateTrip = createAsyncThunk(
+    'trips/updateTrip',
+    async ({ id, tripData }, { rejectWithValue }) => {
+        try {
+            const response = await api.put(`/trips/${id}`, tripData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(getApiErrorMessage(error, 'Failed to update trip'));
+        }
+    }
+);
 
 // Delete a trip by id
-export const deleteTrip = createAsyncThunk('trips/deleteTrip', async (tripId) => {
-    await api.delete(`/trips/${tripId}`);
-    return tripId; // return the id so the reducer knows which item to remove
-});
+export const deleteTrip = createAsyncThunk(
+    'trips/deleteTrip',
+    async (tripId, { rejectWithValue }) => {
+        try {
+            await api.delete(`/trips/${tripId}`);
+            return tripId; // return the id so the reducer knows which item to remove
+        } catch (error) {
+            return rejectWithValue(getApiErrorMessage(error, 'Failed to delete trip'));
+        }
+    }
+);
 
 const tripsSlice = createSlice({
     name: 'trips',
@@ -61,7 +92,7 @@ const tripsSlice = createSlice({
             })
             .addCase(fetchTrips.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.error = action.payload || action.error.message;
             })
 
             // --- addTrip ---
@@ -70,7 +101,7 @@ const tripsSlice = createSlice({
                 state.items.push(action.payload);
             })
             .addCase(addTrip.rejected, (state, action) => {
-                state.error = action.error.message;
+                state.error = action.payload || action.error.message;
             })
 
             // --- updateTrip ---
@@ -80,7 +111,7 @@ const tripsSlice = createSlice({
                 if (index !== -1) state.items[index] = action.payload;
             })
             .addCase(updateTrip.rejected, (state, action) => {
-                state.error = action.error.message;
+                state.error = action.payload || action.error.message;
             })
 
             // --- deleteTrip ---
@@ -89,7 +120,7 @@ const tripsSlice = createSlice({
                 state.items = state.items.filter((t) => t._id !== action.payload);
             })
             .addCase(deleteTrip.rejected, (state, action) => {
-                state.error = action.error.message;
+                state.error = action.payload || action.error.message;
             });
     }
 });

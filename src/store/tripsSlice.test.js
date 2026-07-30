@@ -4,6 +4,18 @@ import reducer, {
   fetchTrips,
   updateTrip
 } from './tripsSlice';
+import { configureStore } from '@reduxjs/toolkit';
+import api from '../api/api';
+
+jest.mock('../api/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn()
+  }
+}));
 
 describe('trips reducer', () => {
   test('tracks loading and stores fetched trips', () => {
@@ -63,5 +75,18 @@ describe('trips reducer', () => {
 
     expect(nextState.loading).toBe(false);
     expect(nextState.error).toBe('Network error');
+  });
+
+  test('stores the server response message when an API request is rejected', async () => {
+    api.post.mockRejectedValueOnce({
+      response: { data: { message: 'Destination is required' } }
+    });
+    const store = configureStore({ reducer: { trips: reducer } });
+
+    const result = await store.dispatch(addTrip({}));
+
+    expect(addTrip.rejected.match(result)).toBe(true);
+    expect(result.payload).toBe('Destination is required');
+    expect(store.getState().trips.error).toBe('Destination is required');
   });
 });

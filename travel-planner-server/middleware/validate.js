@@ -9,7 +9,7 @@ const validate = (schema) => {
     return (req, res, next) => {
         // Check the request body against the schema.
         // abortEarly: false  -> collect ALL errors, not just the first one.
-        const { error } = schema.validate(req.body, { abortEarly: false });
+        const { error, value } = schema.validate(req.body, { abortEarly: false });
 
         if (error) {
             // Join all the individual messages into one readable string.
@@ -19,7 +19,9 @@ const validate = (schema) => {
             return res.status(400).json({ message: messages });
         }
 
-        // Data is valid -> continue to the actual route handler.
+        // Use Joi's converted value so trimmed strings and converted numbers/dates
+        // are the values that reach the controller and database.
+        req.body = value;
         next();
     };
 };

@@ -57,7 +57,11 @@ const AddTripPage = () => {
       setMessage('Trip created successfully! Redirecting...');
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error) {
-      setMessage(error.message || 'Failed to create trip. Please try again.');
+      setMessage(
+        typeof error === 'string'
+          ? error
+          : error.message || 'Failed to create trip. Please try again.'
+      );
       setSubmitting(false); // re-enable only on failure (success navigates away)
     }
   };

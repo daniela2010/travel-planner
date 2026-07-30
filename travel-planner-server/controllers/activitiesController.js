@@ -2,6 +2,8 @@ const Activity = require('../models/Activity');
 const Trip     = require('../models/Trip');
 const AppError = require('../utils/AppError');
 
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
 /**
  * Loads a trip and verifies that it belongs to the authenticated user.
  * @param {string} tripId MongoDB trip id.
@@ -13,6 +15,22 @@ async function getOwnedTrip(tripId, userId) {
     if (!trip) throw new AppError('Trip not found', 404);
     if (trip.userId.toString() !== userId) throw new AppError('Not authorized to access this trip', 403);
     return trip;
+}
+
+/**
+ * Rejects an activity day that falls outside the owned trip's date range.
+ * Day 1 is the trip's start date, so a same-day trip has one valid day.
+ * @param {object} trip Mongoose trip document.
+ * @param {number} activityDay Requested itinerary day.
+ */
+function validateActivityDay(trip, activityDay) {
+    const tripLength = Math.floor(
+        (trip.endDate.getTime() - trip.startDate.getTime()) / MILLISECONDS_PER_DAY
+    ) + 1;
+
+    if (activityDay > tripLength) {
+        throw new AppError(`Day must be between 1 and ${tripLength} for this trip`, 400);
+    }
 }
 
 /**
@@ -43,7 +61,8 @@ exports.getActivities = async (req, res, next) => {
  */
 exports.createActivity = async (req, res, next) => {
     try {
-        await getOwnedTrip(req.params.tripId, req.user.id);
+        const trip = await getOwnedTrip(req.params.tripId, req.user.id);
+        validateActivityDay(trip, req.body.day);
 
         const newActivity = new Activity({
             tripId: req.params.tripId,
@@ -70,7 +89,8 @@ exports.createActivity = async (req, res, next) => {
  */
 exports.updateActivity = async (req, res, next) => {
     try {
-        await getOwnedTrip(req.params.tripId, req.user.id);
+        const trip = await getOwnedTrip(req.params.tripId, req.user.id);
+        validateActivityDay(trip, req.body.day);
 
         const updated = await Activity.findOneAndUpdate(
             { _id: req.params.activityId, tripId: req.params.tripId },

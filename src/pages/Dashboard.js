@@ -84,7 +84,11 @@ const Dashboard = () => {
       await dispatch(updateTrip({ id: editingId, tripData: editForm })).unwrap();
       setEditingId(null);
     } catch (err) {
-      setEditError('Could not update the trip. Please check the fields.');
+      setEditError(
+        typeof err === 'string'
+          ? err
+          : err.message || 'Could not update the trip. Please check the fields.'
+      );
     } finally {
       setSavingTrip(false);
     }
