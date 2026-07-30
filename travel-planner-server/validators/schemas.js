@@ -7,11 +7,11 @@ const Joi = require('joi');
 
 // Rules for registering a new user
 const registerSchema = Joi.object({
-    name: Joi.string().min(2).max(50).required().messages({
+    name: Joi.string().trim().min(2).max(50).required().messages({
         'string.empty': 'Name is required',
         'string.min': 'Name must be at least 2 characters'
     }),
-    email: Joi.string().email().required().messages({
+    email: Joi.string().trim().email().required().messages({
         'string.email': 'Please provide a valid email address',
         'string.empty': 'Email is required'
     }),
@@ -23,13 +23,13 @@ const registerSchema = Joi.object({
 
 // Rules for logging in
 const loginSchema = Joi.object({
-    email: Joi.string().email().required(),
+    email: Joi.string().trim().email().required(),
     password: Joi.string().required()
 });
 
 // Rules for creating a trip
 const tripSchema = Joi.object({
-    destination: Joi.string().min(2).max(100).required().messages({
+    destination: Joi.string().trim().min(2).max(100).required().messages({
         'string.empty': 'Destination is required'
     }),
     startDate: Joi.date().required().messages({
@@ -51,15 +51,16 @@ const activitySchema = Joi.object({
         'number.base': 'Day must be a number',
         'any.required': 'Day is required'
     }),
-    time: Joi.string().required().messages({
-        'string.empty': 'Time is required'
+    time: Joi.string().trim().pattern(/^([01]\d|2[0-3]):[0-5]\d$/).required().messages({
+        'string.empty': 'Time is required',
+        'string.pattern.base': 'Time must use the 24-hour HH:MM format'
     }),
-    title: Joi.string().min(2).max(100).required().messages({
+    title: Joi.string().trim().min(2).max(100).required().messages({
         'string.empty': 'Title is required'
     }),
     // Must match one of the allowed types in the Activity model
-    type: Joi.string().valid('Transport', 'Lodging', 'Food', 'Attraction', 'Other').required(),
-    notes: Joi.string().allow('', null).optional()
+    type: Joi.string().trim().valid('Transport', 'Lodging', 'Food', 'Attraction', 'Other').required(),
+    notes: Joi.string().trim().allow('', null).optional()
 });
 
 module.exports = {

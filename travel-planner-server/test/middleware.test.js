@@ -7,6 +7,9 @@ const authMiddleware = require('../middleware/Auth');
 const errorHandler = require('../middleware/errorHandler');
 const validate = require('../middleware/validate');
 const AppError = require('../utils/AppError');
+const Trip = require('../models/Trip');
+const { activitySchema } = require('../validators/schemas');
+const { createActivity } = require('../controllers/activitiesController');
 
 const createResponse = () => ({
     statusCode: 200,
@@ -42,6 +45,70 @@ test('Joi validation passes valid request bodies', () => {
 
     assert.equal(nextCalled, true);
     assert.equal(res.body, null);
+});
+
+test('activity validation trims text and enforces the HH:MM time format', () => {
+    const middleware = validate(activitySchema);
+    const validReq = {
+        body: {
+            day: '2',
+            time: ' 09:30 ',
+            title: ' Museum visit ',
+            type: 'Attraction',
+            notes: ' Buy tickets '
+        }
+    };
+    const validRes = createResponse();
+    let nextCalled = false;
+
+    middleware(validReq, validRes, () => { nextCalled = true; });
+
+    assert.equal(nextCalled, true);
+    assert.equal(validReq.body.day, 2);
+    assert.equal(validReq.body.time, '09:30');
+    assert.equal(validReq.body.title, 'Museum visit');
+    assert.equal(validReq.body.notes, 'Buy tickets');
+
+    const invalidRes = createResponse();
+    middleware({
+        body: {
+            day: 1,
+            time: '25:90',
+            title: 'Dinner',
+            type: 'Food'
+        }
+    }, invalidRes, () => assert.fail('next should not be called'));
+
+    assert.equal(invalidRes.statusCode, 400);
+    assert.match(invalidRes.body.message, /HH:MM/);
+});
+
+test('activity creation rejects a day outside the trip date range', async () => {
+    const originalFindById = Trip.findById;
+    Trip.findById = async () => ({
+        userId: { toString: () => 'user-1' },
+        startDate: new Date('2026-08-01T00:00:00.000Z'),
+        endDate: new Date('2026-08-03T00:00:00.000Z')
+    });
+
+    let receivedError;
+    try {
+        await createActivity({
+            params: { tripId: 'trip-1' },
+            user: { id: 'user-1' },
+            body: {
+                day: 4,
+                time: '09:00',
+                title: 'Too late',
+                type: 'Other'
+            }
+        }, createResponse(), (error) => { receivedError = error; });
+    } finally {
+        Trip.findById = originalFindById;
+    }
+
+    assert.equal(receivedError.statusCode, 400);
+    assert.match(receivedError.message, /between 1 and 3/);
 });
 
 test('auth middleware rejects requests without a bearer token', () => {
