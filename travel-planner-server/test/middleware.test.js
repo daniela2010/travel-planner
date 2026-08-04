@@ -11,6 +11,7 @@ const Trip = require('../models/Trip');
 const { activitySchema } = require('../validators/schemas');
 const { createActivity } = require('../controllers/activitiesController');
 
+// Lightweight Express response double used by middleware unit tests.
 const createResponse = () => ({
     statusCode: 200,
     body: null,
@@ -84,6 +85,7 @@ test('activity validation trims text and enforces the HH:MM time format', () => 
 });
 
 test('activity creation rejects a day outside the trip date range', async () => {
+    // Stub the database lookup so this controller rule can be tested without MongoDB.
     const originalFindById = Trip.findById;
     Trip.findById = async () => ({
         userId: { toString: () => 'user-1' },
@@ -104,6 +106,7 @@ test('activity creation rejects a day outside the trip date range', async () => 
             }
         }, createResponse(), (error) => { receivedError = error; });
     } finally {
+        // Always restore the model method so later tests keep their normal behavior.
         Trip.findById = originalFindById;
     }
 
@@ -150,6 +153,7 @@ test('global error handler preserves AppError status codes', () => {
 
 test('unknown API routes return a JSON 404 response', async (t) => {
     const app = require('../app');
+    // Port 0 asks the operating system for an available temporary test port.
     const server = app.listen(0, '127.0.0.1');
     t.after(() => new Promise((resolve) => server.close(resolve)));
 

@@ -5,6 +5,8 @@ import { fetchTrips, deleteTrip, updateTrip, clearError } from '../store/tripsSl
 import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
+// Dashboard page. Shows the logged-in user's trips from the Redux store and
+// lets them create, open, inline-edit, or delete a trip.
 const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();

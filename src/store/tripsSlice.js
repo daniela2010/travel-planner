@@ -5,11 +5,12 @@ import api from '../api/api';
 // A "slice" bundles the state, reducers, and actions for one feature.
 // Redux Toolkit is the modern, recommended way to write Redux.
 
-// --- Async thunks ---
+// Async thunks
 // A thunk lets us do async work (API calls) inside Redux.
 // Each thunk auto-generates three actions: pending / fulfilled / rejected.
 // We handle all three in extraReducers so the UI can react to every stage.
 
+// Prefer the backend's Joi/controller message; use a fallback for network failures.
 const getApiErrorMessage = (error, fallbackMessage) =>
     error.response?.data?.message || error.message || fallbackMessage;
 

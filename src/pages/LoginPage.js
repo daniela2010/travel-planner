@@ -4,6 +4,9 @@ import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
+// Login page. Collects email and password, validates them on the client,
+// then calls POST /login. On success it stores the JWT through AuthContext
+// and redirects the user to the dashboard.
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

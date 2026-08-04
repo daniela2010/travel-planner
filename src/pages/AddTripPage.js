@@ -4,6 +4,9 @@ import { useDispatch } from 'react-redux';
 import { addTrip } from '../store/tripsSlice';
 import './AddTripPage.css';
 
+// Add Trip page. A form for creating a new trip. Validates the fields on the
+// client, then dispatches the addTrip Redux thunk so the trip is saved and the
+// dashboard list updates immediately.
 const AddTripPage = () => {
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate]     = useState('');

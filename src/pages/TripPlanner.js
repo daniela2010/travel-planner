@@ -5,6 +5,9 @@ import { useFetch } from '../hooks/useFetch';
 import ActivityCard from '../components/ActivityCard';
 import './TripPlanner.css';
 
+// Trip Planner page. Shows one trip's day-by-day itinerary. Loads the trip
+// (via the useFetch hook) and its activities, and lets the user add, edit,
+// delete, and attach or remove photos on activities for each day.
 const TripPlanner = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -59,15 +62,18 @@ const TripPlanner = () => {
   }, [loadActivities]);
 
   useEffect(() => {
+    // Keep the latest URL map available to the unmount cleanup without rerunning it.
     imageUrlsRef.current = imageUrls;
   }, [imageUrls]);
 
   useEffect(() => {
+    // Object URLs hold browser memory and must be released when the page closes.
     return () => {
       Object.values(imageUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
+  // Revoke and remove one cached preview before replacing or deleting its image.
   const discardImageUrl = useCallback((activityId) => {
     setImageUrls((prev) => {
       if (prev[activityId]) URL.revokeObjectURL(prev[activityId]);
@@ -87,6 +93,7 @@ const TripPlanner = () => {
               `/trips/${tripId}/activities/${activity._id}/image`,
               { responseType: 'blob' }
             );
+            // Convert the protected binary response into a temporary <img>-safe URL.
             const url = URL.createObjectURL(res.data);
             setImageUrls((prev) => {
               if (prev[activity._id]) {
@@ -200,6 +207,7 @@ const TripPlanner = () => {
 
   const handleImageUpload = useCallback(async (activityId, file) => {
     if (!file) return;
+    // Client checks provide immediate feedback; Multer repeats them for security.
     if (!file.type.startsWith('image/')) {
       setError('Only image files are allowed.');
       return;
@@ -212,6 +220,7 @@ const TripPlanner = () => {
     setUploadingActivityId(activityId);
     setError('');
     try {
+      // FormData is required because JSON cannot carry the file's binary bytes.
       const formData = new FormData();
       formData.append('image', file);
 

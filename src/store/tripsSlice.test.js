@@ -7,6 +7,7 @@ import reducer, {
 import { configureStore } from '@reduxjs/toolkit';
 import api from '../api/api';
 
+// Mock HTTP methods so reducer and thunk behavior can be tested without the server.
 jest.mock('../api/api', () => ({
   __esModule: true,
   default: {
@@ -81,6 +82,7 @@ describe('trips reducer', () => {
     api.post.mockRejectedValueOnce({
       response: { data: { message: 'Destination is required' } }
     });
+    // A real test store runs the complete thunk -> rejected action -> reducer flow.
     const store = configureStore({ reducer: { trips: reducer } });
 
     const result = await store.dispatch(addTrip({}));
