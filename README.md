@@ -172,7 +172,22 @@ travel-planner/
 ```
 
 ---
+## Environment Variables
 
+### Frontend
+
+| Variable | Required | Description |
+|---|---|---|
+| `REACT_APP_API_URL` | Production only | Backend API URL. Locally, the application defaults to `http://localhost:5000/api`. |
+
+### Backend
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | MongoDB or MongoDB Atlas connection string. |
+| `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens. |
+| `FRONTEND_URL` | Yes | Frontend origin permitted by CORS. |
+| `PORT` | No | Express server port. Defaults to `5000`. |
 ## Running Locally
 
 ### Prerequisites
