@@ -25,6 +25,13 @@ app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// Root health-check route. Visiting the base URL in a browser returns a small
+// JSON status instead of Express's default "Cannot GET /" page, so it is clear
+// the API is running.
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'Travel Planner API is running' });
+});
+
 // Rate limiting: general limit on every /api route,
 // stricter limit on auth routes to block brute-force password guessing.
 app.use('/api', apiLimiter);
