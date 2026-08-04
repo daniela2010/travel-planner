@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// --- Activity model ---
+// Activity model
 // An Activity is a single item in a trip's itinerary:
 // a flight, a hotel check-in, a restaurant booking, an attraction, etc.
 // Each Activity belongs to ONE Trip (and through it, to one User).

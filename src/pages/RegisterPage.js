@@ -4,6 +4,9 @@ import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import './RegisterPage.css';
 
+// Register page. Collects name, email, password and a confirmation, validates
+// them on the client, then calls POST /register. On success it logs the new
+// user in through AuthContext and redirects to the dashboard.
 function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

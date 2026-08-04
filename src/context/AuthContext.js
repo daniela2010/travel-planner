@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         const userName = localStorage.getItem('userName');
+        // Prevent the asynchronous /me response from updating state after unmount.
         let active = true;
 
         if (!token) {

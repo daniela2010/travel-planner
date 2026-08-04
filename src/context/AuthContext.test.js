@@ -2,11 +2,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 import api from '../api/api';
 
+// Isolate Context behavior from the real backend and control /me responses per test.
 jest.mock('../api/api', () => ({
   __esModule: true,
   default: { get: jest.fn(() => Promise.reject(new Error('No active session'))) }
 }));
 
+// Minimal consumer that exposes Context state and actions through the rendered UI.
 const AuthProbe = () => {
   const { user, loading, login, logout } = useAuth();
 

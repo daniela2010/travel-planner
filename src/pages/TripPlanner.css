@@ -2,11 +2,11 @@
   padding: var(--space-lg);
   max-width: 1200px;
   margin: 0 auto;
-  background-color: #f1f5f9; /* הרקע האחיד של האפליקציה */
+  background-color: #f1f5f9; /* Shared application background */
   min-height: 100vh;
 }
 
-/* --- סרגל עליון --- */
+/* Planner header */
 .planner-header {
   display: flex;
   justify-content: space-between;
@@ -35,14 +35,14 @@
   box-shadow: none;
 }
 
-/* --- פריסת הרשת (Grid Layout) --- */
+/* --- Main grid layout --- */
 .planner-layout {
   display: grid;
-  grid-template-columns: 280px 1fr; /* סרגל הצד תופס 280 פיקסלים, השאר לאזור המרכזי */
+  grid-template-columns: 280px 1fr; /* Fixed itinerary sidebar plus flexible content */
   gap: var(--space-lg);
 }
 
-/* --- סרגל ימים (Sidebar) --- */
+/* --- Itinerary day sidebar --- */
 .days-sidebar {
   background-color: white;
   padding: var(--space-lg);
@@ -73,7 +73,7 @@
 
 .day-btn:hover { background-color: #f8fafc; }
 
-/* היום המסומן כרגע */
+/* Currently selected itinerary day */
 .day-btn.active {
   background-color: #eff6ff;
   color: var(--primary-blue);
@@ -94,7 +94,7 @@
 }
 .btn-add-day:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
 
-/* --- אזור פעילויות מרכזי --- */
+/* Main activities area */
 .activities-main {
   background-color: white;
   padding: var(--space-lg);
@@ -127,7 +127,7 @@
   gap: var(--space-md);
 }
 
-/* כרטיסיית פעילות בודדת */
+/* Individual activity card */
 .activity-card {
   display: flex;
   align-items: center;
@@ -321,9 +321,7 @@
   cursor: not-allowed;
 }
 
-/* ============================================================
-   Responsive layout — tablets and phones
-   ============================================================ */
+/* Responsive layout — tablets and phones */
 @media (max-width: 768px) {
   .planner-container {
     padding: 12px;
