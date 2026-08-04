@@ -14,7 +14,7 @@ A full-stack web application for planning and organizing trips. Users can create
 ## Features
 
 - User registration and login with JWT authentication (with confirm-password validation)
-- Password encryption with bcrypt (pre-save hook, `select: false` on the hash)
+- Password hashing with bcrypt (pre-save hook, `select: false` on the hash)
 - Create, edit, and delete trips
 - Day-by-day itinerary planner for each trip
 - Add, edit, and delete activities per day
@@ -32,22 +32,44 @@ A full-stack web application for planning and organizing trips. Users can create
 ### Registration
 Create an account with client-side validation and password confirmation.
 
-<img width="2396" height="1412" alt="צילום מסך 2026-08-04 122758" src="https://github.com/user-attachments/assets/e6e963e7-cddf-4d24-ab67-7bf425ce809c" />
+<img width="900" alt="Travel Planner registration page" src="https://github.com/user-attachments/assets/e6e963e7-cddf-4d24-ab67-7bf425ce809c" />
 
 ### Login
 Sign in securely and start a verified user session.
 
-<img width="2092" height="1328" alt="צילום מסך 2026-08-04 163542" src="https://github.com/user-attachments/assets/3b1ec22b-5cb0-415b-9527-82dad67fafed" />
+<img width="900" alt="Travel Planner login page" src="https://github.com/user-attachments/assets/3b1ec22b-5cb0-415b-9527-82dad67fafed" />
 
 ### Trip Dashboard
 Manage multiple trips, including their dates, budgets, and edit/delete actions.
 
-<img width="2824" height="1400" alt="צילום מסך 2026-08-04 123422" src="https://github.com/user-attachments/assets/539c6ecc-c65b-4a40-8705-d50930912889" />
+<img width="900" alt="Travel Planner trip dashboard" src="https://github.com/user-attachments/assets/539c6ecc-c65b-4a40-8705-d50930912889" />
 
-### Day by Day Itinerary
+### Day-by-Day Itinerary
 Plan activities by day and attach travel confirmations or photos to activities.
 
-<img width="2472" height="1444" alt="צילום מסך 2026-08-04 163500" src="https://github.com/user-attachments/assets/9f880066-707a-43ab-ab86-c517e66ab728" />
+<img width="900" alt="Travel Planner day-by-day itinerary" src="https://github.com/user-attachments/assets/9f880066-707a-43ab-ab86-c517e66ab728" />
+
+---
+
+## Architecture
+
+The project is divided into a React frontend and an Express backend:
+
+1. The React frontend is deployed on Vercel. It uses AuthContext for the current user and Redux Toolkit for trip data, loading states, and request errors.
+2. A shared Axios client sends JSON or multipart requests to the REST API and attaches the JWT to protected requests.
+3. The Express backend is deployed on Render. Requests pass through middleware for security, authentication, validation, rate limiting, and file uploads before reaching route controllers.
+4. Controllers use Mongoose models to read and write data in MongoDB Atlas and return JSON responses to the frontend.
+
+### Data Model
+
+```text
+User
+└── Trips (Trip.userId references User)
+    └── Activities (Activity.tripId references Trip)
+        └── Optional image stored in the Activity document
+```
+
+This creates one-to-many relationships from users to trips and from trips to activities. Deleting a trip also deletes its related activities.
 
 ---
 
@@ -172,13 +194,14 @@ travel-planner/
 ```
 
 ---
+
 ## Environment Variables
 
 ### Frontend
 
 | Variable | Required | Description |
 |---|---|---|
-| `REACT_APP_API_URL` | Production only | Backend API URL. Locally, the application defaults to `http://localhost:5000/api`. |
+| `REACT_APP_API_URL` | Production | Backend API URL. Locally, the application defaults to `http://localhost:5000/api`. |
 
 ### Backend
 
@@ -188,10 +211,15 @@ travel-planner/
 | `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens. |
 | `FRONTEND_URL` | Yes | Frontend origin permitted by CORS. |
 | `PORT` | No | Express server port. Defaults to `5000`. |
+
+Never commit real `.env` files. The repository includes `.env.example` files that document the expected variables without exposing secrets.
+
+---
+
 ## Running Locally
 
 ### Prerequisites
-- Node.js installed
+- Node.js 18 or newer
 - MongoDB installed and running locally (or a MongoDB Atlas connection string)
 
 ### Backend
@@ -200,12 +228,7 @@ cd travel-planner-server
 npm install
 ```
 
-Create a `.env` file inside `travel-planner-server/` (see `.env.example`):
-```
-DATABASE_URL=mongodb://127.0.0.1:27017/travel_planner
-JWT_SECRET=your_secret_key
-FRONTEND_URL=http://localhost:3000
-```
+Create `travel-planner-server/.env` using the backend variables listed above. Example values are available in `travel-planner-server/.env.example`.
 
 ```bash
 npm start
@@ -217,6 +240,8 @@ npm start
 npm install
 npm start
 ```
+
+The frontend uses `http://localhost:5000/api` by default. To use another backend, create a root `.env` file and set `REACT_APP_API_URL` as shown in `.env.example`.
 
 Open http://localhost:3000 in your browser.
 
