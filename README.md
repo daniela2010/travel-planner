@@ -29,11 +29,25 @@ A full-stack web application for planning and organizing trips. Users can create
 
 ## Screenshots
 
-<!-- TODO: Add 2-3 screenshots of the app here, e.g.: -->
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
-<!-- ![Trip Planner](docs/screenshots/planner.png) -->
+### Registration
+Create an account with client-side validation and password confirmation.
 
-*Screenshots coming soon — see the [live demo](https://travel-planner-nu-khaki.vercel.app) in the meantime.*
+<img width="2396" height="1412" alt="צילום מסך 2026-08-04 122758" src="https://github.com/user-attachments/assets/e6e963e7-cddf-4d24-ab67-7bf425ce809c" />
+
+### Login
+Sign in securely and start a verified user session.
+
+<img width="2092" height="1328" alt="צילום מסך 2026-08-04 163542" src="https://github.com/user-attachments/assets/3b1ec22b-5cb0-415b-9527-82dad67fafed" />
+
+### Trip Dashboard
+Manage multiple trips, including their dates, budgets, and edit/delete actions.
+
+<img width="2824" height="1400" alt="צילום מסך 2026-08-04 123422" src="https://github.com/user-attachments/assets/539c6ecc-c65b-4a40-8705-d50930912889" />
+
+### Day by Day Itinerary
+Plan activities by day and attach travel confirmations or photos to activities.
+
+<img width="2472" height="1444" alt="צילום מסך 2026-08-04 163500" src="https://github.com/user-attachments/assets/9f880066-707a-43ab-ab86-c517e66ab728" />
 
 ---
 
