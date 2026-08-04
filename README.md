@@ -268,4 +268,4 @@ npm test
 
 | Member | Role |
 |--------|------|
-| Daniela | Solo project — backend, frontend, database design, deployment |
+| Daniela Roitman| Solo project — backend, frontend, database design, deployment |
